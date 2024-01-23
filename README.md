@@ -19,8 +19,8 @@ The following times the query is searched, it will search database and return re
 
 # TO-DO
 - [ ] Test
-- [ ] Add Scheduler to recheck database for cached status and remove when no longer cached
-- [ ] Add scheduler to check for more results for titles in cache
+- [ ] Add Scheduler to recheck database for cached status and remove when item is no longer cached
+- [ ] Add scheduler to check for more results for titles in database for cached status
 - [ ] Parse data better
 - [ ] Allow IMDBID to be used as search query
 - [ ] Hosted centralised database that each self hosted instance can connect to and add data to
