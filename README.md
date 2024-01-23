@@ -2,7 +2,7 @@
 Do not attempt to use this code yet as it will do nothing lol
 Written from scratch, with no experience in coding with the help of chatgpt.
 
-#On Demand Real-Debrid Cached Indexer
+# On Demand Real-Debrid Cached Indexer
 Feels like Torrentio, Acts like real-debrid for torrents.
 
 # Basic Workflow
