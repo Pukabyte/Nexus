@@ -1,17 +1,3 @@
-version: "3"
-services:
-  cacharr:
-    restart: unless-stopped 
-    container_name: cacharr 
-    image: docker/image:tag 
-    hostname: APPNAME 
-    environment: 
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-    networks: 
-      - saltbox
-
 version: '3'
 
 services:
