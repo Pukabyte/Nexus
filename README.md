@@ -1,4 +1,4 @@
-# This is a work in progress
+## This is a work in progress
 Do not attempt to use this code yet as it will do nothing lol
 Written from scratch, with no experience in coding with the help of chatgpt.
 
