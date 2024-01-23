@@ -5,7 +5,7 @@ Written from scratch, with no experience in coding with the help of chatgpt.
 # On Demand Real-Debrid Cached Indexer
 Feels like Torrentio, Acts like real-debrid for torrents.
 
-# Basic Workflow
+## Basic Workflow
 - Send query (Title / IMDBID)
 - Search Database
 - If results are found, return results to client
@@ -17,7 +17,7 @@ Feels like Torrentio, Acts like real-debrid for torrents.
 The first time query is searched it will parse the data and save the data to database
 The following times the query is searched, it will search database and return results as if cached.
 
-# TO-DO
+## TO-DO
 - [ ] Test
 - [ ] Add Scheduler to recheck database for cached status and remove when item is no longer cached
 - [ ] Add scheduler to check for more results for titles in database for cached status
