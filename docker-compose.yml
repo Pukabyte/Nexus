@@ -1,0 +1,51 @@
+version: "3"
+services:
+  cacharr:
+    restart: unless-stopped 
+    container_name: cacharr 
+    image: docker/image:tag 
+    hostname: APPNAME 
+    environment: 
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    networks: 
+      - saltbox
+
+version: '3'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8978:8978"
+    depends_on:
+      - db
+    environment:
+      PUID: 1000
+      PGID: 1000
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      REAL_DEBRID_API_TOKEN: ${REAL_DEBRID_API_TOKEN}
+      API_URL: ${API_URL}
+    networks: 
+      - cacharr
+
+  db:
+    image: postgres:latest
+    environment:
+      PUID: 1000
+      PGID: 1000
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./cache-data:/var/lib/postgresql/data
+    networks: 
+      - cacharr
+
+volumes:
+  postgres_data:
+
+networks: 
+  cacharr:
+    external: true
