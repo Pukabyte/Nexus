@@ -1,7 +1,8 @@
 version: '3'
 
 services:
-  web:
+  cacharr:
+    container_name: cacharr
     build: .
     ports:
       - "8978:8978"
@@ -17,6 +18,7 @@ services:
       - cacharr
 
   db:
+    container_name: cacharr-db
     image: postgres:latest
     environment:
       PUID: 1000
