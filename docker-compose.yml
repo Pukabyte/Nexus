@@ -1,19 +1,19 @@
-version: '3'
+version: '3.9'
 
 services:
   nexus:
-    container_name: nexuscache
+    image: pukabyte/nexus:latest
     build: .
+    container_name: nexus
+    restart: no
     ports:
       - "8978:8978"
     environment:
       PUID: 1000
       PGID: 1000
-      REAL_DEBRID_API_TOKEN: RD_API_KEY
-      API_URL: API_URL # nexus url
-    networks: 
+      RD_KEY: ${RD_KEY:-YOUR_RD_KEY}
+    networks:
       - nexus
 
-networks: 
+networks:
   nexus:
-    external: true
