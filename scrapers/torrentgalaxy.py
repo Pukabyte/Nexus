@@ -3,13 +3,13 @@ import time
 import aiohttp
 from bs4 import BeautifulSoup
 from scrapers import BaseScraper
-from utils.sites import sites
 
 
 class TorrentGalaxy(BaseScraper):
-    def __init__(self):
-        self.url = sites.torrentgalaxy.website
-        self.limit = None
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
     def _parser_individual(self, html):
         try:

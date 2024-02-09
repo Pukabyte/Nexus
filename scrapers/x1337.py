@@ -3,16 +3,16 @@ import re
 import time
 import aiohttp
 from bs4 import BeautifulSoup
-from scrapers import BaseScraper, HEADER_AIO, decorator_asyncio_fix
-from utils.sites import sites
+from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
 
 
-class x1337(BaseScraper):
-    def __init__(self):
-        self.url = sites.x1337.website
-        self.limit = None
+class X1337(BaseScraper):
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
-    @decorator_asyncio_fix
+    @asyncio_fix
     async def _individual_scrap(self, session, url, obj):
         try:
             async with session.get(url, headers=HEADER_AIO) as res:
@@ -174,9 +174,7 @@ class x1337(BaseScraper):
             if not category:
                 url = self.url + "/trending"
             else:
-                url = self.url + "/cat/{}/{}/".format(
-                    str(category).capitalize(), page
-                )
+                url = self.url + "/cat/{}/{}/".format(str(category).capitalize(), page)
             return await self.parser_result(start_time, url, session, page)
 
     async def search_by_category(self, query, category, page, limit):

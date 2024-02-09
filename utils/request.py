@@ -38,7 +38,7 @@ class ResponseObject:
             if self.status_code == 401:
                 raise response.raise_for_status()
             return {}
-        
+
         if len(response.content) > 0:
             if "handler error" not in response.text:
                 content_type = response.headers.get("Content-Type")

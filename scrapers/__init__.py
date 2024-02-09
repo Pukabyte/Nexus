@@ -1,7 +1,7 @@
 import os
 import sys
 import asyncio
-from utils import decorator_asyncio_fix
+from utils import asyncio_fix
 
 
 HTTP_PROXY = os.environ.get("HTTP_PROXY", None)
@@ -10,13 +10,14 @@ HEADER_AIO = {
     "Cookie": "fencekey=8e5j3p61b3k0a9b0e44c5bbcecafaa5a2",
 }
 
+
 class BaseScraper:
     """Scraper class for scraping html"""
 
     def __init__(self):
         pass
 
-    @decorator_asyncio_fix
+    @asyncio_fix
     async def _get_html(self, session, url):
         try:
             async with session.get(url, headers=HEADER_AIO, proxy=HTTP_PROXY) as r:
@@ -32,8 +33,16 @@ class BaseScraper:
         """Search method for searching torrents"""
         raise NotImplementedError
 
+    async def trending(self, category, page, limit):
+        """Trending method for getting trending torrents"""
+        raise NotImplementedError
 
-def decorator_asyncio_fix(func):
+    async def recent(self, category, page, limit):
+        """Recent method for getting recent torrents"""
+        raise NotImplementedError
+
+
+def asyncio_fix(func):
     """Decorator for fixing asyncio bug on windows"""
 
     def wrapper(*args):

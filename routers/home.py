@@ -7,6 +7,7 @@ from utils.sites import sites
 
 base = APIRouter(tags=["Home Route"], prefix="")
 
+
 @base.get("/")
 def root(req: Request):
     """Health route for checking the health of the api"""
@@ -18,6 +19,7 @@ def root(req: Request):
         }
     )
 
+
 @base.get("/health")
 def health_route():
     """Get OK response for checking if the api is up and running"""
@@ -26,6 +28,7 @@ def health_route():
             "message": "OK",
         }
     )
+
 
 @base.get("/sites")
 async def get_all_supported_sites():

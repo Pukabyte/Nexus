@@ -3,16 +3,16 @@ import time
 import aiohttp
 import requests
 from bs4 import BeautifulSoup
-from scrapers import BaseScraper, HEADER_AIO, decorator_asyncio_fix
-from utils.sites import sites
+from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
 
 
 class TorrentProject(BaseScraper):
-    def __init__(self):
-        self.url = sites.torrentproject.website
-        self.limit = None
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
-    @decorator_asyncio_fix
+    @asyncio_fix
     async def _individual_scrap(self, session, url, obj, sem):
         async with sem:
             try:
@@ -52,7 +52,7 @@ class TorrentProject(BaseScraper):
             for html in htmls:
                 soup = BeautifulSoup(html, "html.parser")
                 list_of_urls = []
-                my_dict = {"data": []}
+                my_dict = {"results": []}
                 for div in soup.select("div#similarfiles div")[2:]:
                     span = div.find_all("span")
                     name = span[0].find("a").text

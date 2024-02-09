@@ -1,101 +1,59 @@
-from time import time
-from asyncio import gather, create_task
-from fastapi import APIRouter, status
-from fastapi import status
-from utils import error_handler
-from utils.sites import Sites
+import time
+from fastapi import APIRouter, HTTPException, Query
+from utils.sites import sites
 from typing import Optional
-
+from asyncio import gather, create_task
 
 search = APIRouter(tags=["Search"], prefix="/search")
 
+
 @search.get("/")
-async def get_search_combo(query: str, limit: Optional[int] = 0):
-    start_time = time()
-    query = query.lower()
-    all_sites = Sites
-    sites_list = list(all_sites.keys())
-    tasks = []
-    COMBO = {"data": []}
-    total_torrents_overall = 0
-    for site in sites_list:
-        limit = (
-            all_sites[site]["limit"]
-            if limit == 0 or limit > all_sites[site]["limit"]
-            else limit
-        )
-        tasks.append(
-            create_task(
-                all_sites[site]["website"]().search(query, page=1, limit=limit)
-            )
-        )
-    results = await gather(*tasks)
-    for res in results:
-        if res is not None and len(res["data"]) > 0:
-            for torrent in res["data"]:
-                COMBO["data"].append(torrent)
-            total_torrents_overall = total_torrents_overall + res["total"]
-    COMBO["time"] = time() - start_time
-    COMBO["total"] = total_torrents_overall
-    if total_torrents_overall == 0:
-        return error_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            json_message={"error": "Result not found."},
-        )
-    return COMBO
-
-@search.get("/{query}/{limit}/{page}")
-async def search_for_torrents(
-    query: str, limit: Optional[int] = 0, page: Optional[int] = 1
+async def search_torrents(
+    query: str,
+    site: Optional[str] = None,
+    limit: Optional[int] = Query(default=10, ge=1),
+    page: Optional[int] = Query(default=1, ge=1),
 ):
-    site = site.lower()
-    query = query.lower()
-    all_sites = Sites
-    if all_sites:
-        limit = (
-            all_sites[site]["limit"]
-            if limit == 0 or limit > all_sites[site]["limit"]
-            else limit
-        )
+    """
+    Search torrents by query string across all supported sites or a specific site.
 
-        resp = await all_sites[site]["website"]().search(query, page, limit)
-        if resp is None:
-            return error_handler(
-                status_code=status.HTTP_403_FORBIDDEN,
-                json_message={"error": "Website Blocked Change IP or Website Domain."},
+    :param query: The search query string.
+    :param site: Optional. The name of the specific site to search on.
+    :param limit: Optional. The maximum number of results per page.
+    :param page: Optional. The page number of results to retrieve.
+    :return: Combined search results from all sites.
+    """
+    start_time = time.time()
+    query = query.title()
+    tasks = []
+
+    if site:
+        # Search a specific site
+        if site in sites.keys():
+            tasks.append(
+                create_task(
+                    sites.search(site=site, query=query, page=page, limit=limit)
+                )
             )
-        elif len(resp["data"]) > 0:
-            return resp
         else:
-            return error_handler(
-                status_code=status.HTTP_404_NOT_FOUND,
-                json_message={"error": "Result not found."},
+            raise HTTPException(status_code=404, detail=f"Site '{site}' not found.")
+    else:
+        # Search all sites
+        for site_name, site_instance in sites.items():
+            tasks.append(
+                create_task(site_instance.search(query, page=page, limit=limit))
             )
 
-    return error_handler(
-        status_code=status.HTTP_404_NOT_FOUND,
-        json_message={"error": "Selected Site Not Available"},
-    )
+    search_results = await gather(*tasks)
+    combined_results = {"data": [], "total": 0}
 
-@search.get("/{site}/{query}")
-async def get_torrent_from_site(site: str, url: str):
-    site = site.lower()
-    all_sites = Sites
-    if all_sites:
-        resp = await all_sites[site]["website"]().get_torrent_by_url(url)
-        if resp is None:
-            return error_handler(
-                status_code=status.HTTP_403_FORBIDDEN,
-                json_message={"error": "Website Blocked Change IP or Website Domain."},
-            )
-        elif len(resp["data"]) > 0:
-            return resp
-        else:
-            return error_handler(
-                status_code=status.HTTP_404_NOT_FOUND,
-                json_message={"error": "Result not found."},
-            )
-    return error_handler(
-        status_code=status.HTTP_404_NOT_FOUND,
-        json_message={"error": "Selected Site Not Available"},
-    )
+    for result in search_results:
+        if result and result.get("data"):
+            combined_results["data"].extend(result["data"])
+            combined_results["total"] += len(result["data"])
+
+    combined_results["time"] = time.time() - start_time
+    if not combined_results["data"]:
+        raise HTTPException(status_code=404, detail="No results found.")
+
+    return combined_results

@@ -66,4 +66,4 @@ start: ## Start services from python
 
 .PHONY: test
 test: ## Run Pytests
-	pytest
+	pytest -vv

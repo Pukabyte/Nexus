@@ -45,7 +45,7 @@ class Parser:
             "subtitles": parse.get("subtitles") == "Available",
             "language": parse.get("language", []),
             "remux": parse.get("remux", False),
-            "extended": parse.get("extended", [])
+            "extended": parse.get("extended", []),
         }
 
         # Determine if this item should be fetched
@@ -96,18 +96,18 @@ class Parser:
         # This is where we determine if the item should be fetched
         # Edit with caution. All have to match for the item to be fetched.
         return (
-            parsed_data["resolution"] in self.resolution and
-            not parsed_data["is_unwanted_quality"]
+            parsed_data["resolution"] in self.resolution
+            and not parsed_data["is_unwanted_quality"]
         )
 
     @staticmethod
     def is_highest_quality(parsed_data: dict) -> bool:
         """Check if content is `highest quality`."""
         return any(
-            parsed.get("resolution") in ["UHD", "2160p", "4K"] or
-            parsed.get("hdr", False) or
-            parsed.get("remux", False) or
-            parsed.get("upscaled", False)
+            parsed.get("resolution") in ["UHD", "2160p", "4K"]
+            or parsed.get("hdr", False)
+            or parsed.get("remux", False)
+            or parsed.get("upscaled", False)
             for parsed in parsed_data
         )
 
@@ -115,7 +115,9 @@ class Parser:
     def is_dual_audio(string) -> bool:
         """Check if any content in parsed_data has dual audio."""
         dual_audio_patterns = [
-            re.compile(r"\bmulti(?:ple)?[ .-]*(?:lang(?:uages?)?|audio|VF2)?\b", re.IGNORECASE),
+            re.compile(
+                r"\bmulti(?:ple)?[ .-]*(?:lang(?:uages?)?|audio|VF2)?\b", re.IGNORECASE
+            ),
             re.compile(r"\btri(?:ple)?[ .-]*(?:audio|dub\w*)\b", re.IGNORECASE),
             re.compile(r"\bdual[ .-]*(?:au?$|[aá]udio|line)\b", re.IGNORECASE),
             re.compile(r"\bdual\b(?![ .-]*sub)", re.IGNORECASE),
@@ -130,14 +132,29 @@ class Parser:
     def is_complete_series(string) -> bool:
         """Check if string is a `complete series`."""
         series_patterns = [
-            re.compile(r"(?:\bthe\W)?(?:\bcomplete|collection|dvd)?\b[ .]?\bbox[ .-]?set\b", re.IGNORECASE),
-            re.compile(r"(?:\bthe\W)?(?:\bcomplete|collection|dvd)?\b[ .]?\bmini[ .-]?series\b", re.IGNORECASE),
-            re.compile(r"(?:\bthe\W)?(?:\bcomplete|full|all)\b.*\b(?:series|seasons|collection|episodes|set|pack|movies)\b", re.IGNORECASE),
-            re.compile(r"\b(?:series|seasons|movies?)\b.*\b(?:complete|collection)\b", re.IGNORECASE),
+            re.compile(
+                r"(?:\bthe\W)?(?:\bcomplete|collection|dvd)?\b[ .]?\bbox[ .-]?set\b",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"(?:\bthe\W)?(?:\bcomplete|collection|dvd)?\b[ .]?\bmini[ .-]?series\b",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"(?:\bthe\W)?(?:\bcomplete|full|all)\b.*\b(?:series|seasons|collection|episodes|set|pack|movies)\b",
+                re.IGNORECASE,
+            ),
+            re.compile(
+                r"\b(?:series|seasons|movies?)\b.*\b(?:complete|collection)\b",
+                re.IGNORECASE,
+            ),
             re.compile(r"(?:\bthe\W)?\bultimate\b[ .]\bcollection\b", re.IGNORECASE),
             re.compile(r"\bcollection\b.*\b(?:set|pack|movies)\b", re.IGNORECASE),
             re.compile(r"\bcollection\b", re.IGNORECASE),
-            re.compile(r"duology|trilogy|quadr[oi]logy|tetralogy|pentalogy|hexalogy|heptalogy|anthology|saga", re.IGNORECASE)
+            re.compile(
+                r"duology|trilogy|quadr[oi]logy|tetralogy|pentalogy|hexalogy|heptalogy|anthology|saga",
+                re.IGNORECASE,
+            ),
         ]
         return any(pattern.search(string) for pattern in series_patterns)
 
@@ -145,7 +162,9 @@ class Parser:
     def is_unwanted_quality(string) -> bool:
         """Check if string has an 'unwanted' quality. Default to False."""
         unwanted_patterns = [
-            re.compile(r"\b(?:H[DQ][ .-]*)?CAM(?:H[DQ])?(?:[ .-]*Rip)?\b", re.IGNORECASE),
+            re.compile(
+                r"\b(?:H[DQ][ .-]*)?CAM(?:H[DQ])?(?:[ .-]*Rip)?\b", re.IGNORECASE
+            ),
             re.compile(r"\b(?:H[DQ][ .-]*)?S[ .-]*print\b", re.IGNORECASE),
             re.compile(r"\b(?:HD[ .-]*)?T(?:ELE)?S(?:YNC)?(?:Rip)?\b", re.IGNORECASE),
             re.compile(r"\b(?:HD[ .-]*)?T(?:ELE)?C(?:INE)?(?:Rip)?\b", re.IGNORECASE),

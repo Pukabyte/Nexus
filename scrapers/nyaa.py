@@ -1,15 +1,16 @@
+import asyncio
 import re
 import time
 import aiohttp
 from bs4 import BeautifulSoup
 from scrapers import BaseScraper
-from utils.sites import sites
 
 
 class NyaaSi(BaseScraper):
-    def __init__(self):
-        self.url = sites.nyaasi.website
-        self.limit = None
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
     def _parser(self, htmls):
         try:
@@ -70,14 +71,29 @@ class NyaaSi(BaseScraper):
             url = self.url + "/?f=0&c=0_0&q={}&p={}".format(query, page)
             return await self.parser_result(start_time, url, session)
 
-    async def parser_result(self, start_time, url, session):
-        html = await self.get_all_results(session, url)
-        results = self._parser(html)
-        if results is not None:
-            results["time"] = time.time() - start_time
-            results["total"] = len(results["data"])
+    async def parser_result(self, start_time, url, session, retry_count=0):
+        try:
+            html = await self.get_all_results(session, url)
+            results = self._parser(html)
+            if results is not None:
+                results["time"] = time.time() - start_time
+                results["total"] = len(results["data"])
+                return results
             return results
-        return results
+        except aiohttp.ClientResponseError as e:
+            if e.status == 429:  # Too Many Requests
+                if retry_count < 2:  # Maximum retries
+                    retry_count += 1
+                    await asyncio.sleep(2**retry_count)  # Exponential backoff
+                    return await self.parser_result(
+                        start_time, url, session, retry_count
+                    )
+                else:
+                    print("Reached maximum retries. Skipping scraping.")
+                    return None
+            else:
+                print("Unexpected error occurred:", e)
+                return None
 
     async def recent(self, category, page, limit):
         async with aiohttp.ClientSession() as session:

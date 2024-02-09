@@ -6,13 +6,13 @@ import cloudscraper
 import requests
 from bs4 import BeautifulSoup
 from scrapers import BaseScraper
-from utils.sites import sites
 
 
-class Magnetdl(BaseScraper):
-    def __init__(self):
-        self.url = sites.magnetdl.website
-        self.limit = None
+class MagnetDL(BaseScraper):
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
     def _parser(self, htmls):
         try:

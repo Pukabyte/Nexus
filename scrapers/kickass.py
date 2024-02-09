@@ -3,16 +3,16 @@ import re
 import time
 import aiohttp
 from bs4 import BeautifulSoup
-from scrapers import BaseScraper, HEADER_AIO, decorator_asyncio_fix
-from utils.sites import sites
+from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
 
 
 class Kickass(BaseScraper):
-    def __init__(self):
-        self.url = sites.kickass.website
-        self.limit = None
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
-    @decorator_asyncio_fix
+    @asyncio_fix
     async def _individual_scrap(self, session, url, obj):
         try:
             async with session.get(url, headers=HEADER_AIO) as res:

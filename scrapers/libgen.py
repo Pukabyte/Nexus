@@ -2,16 +2,17 @@ import asyncio
 import time
 import aiohttp
 from bs4 import BeautifulSoup
-from scrapers import BaseScraper, HEADER_AIO, decorator_asyncio_fix
-from utils.sites import sites
+from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
+from utils.logger import logger
 
 
 class Libgen(BaseScraper):
-    def __init__(self):
-        self.url = sites.libgen.website
-        self.limit = None
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
-    @decorator_asyncio_fix
+    @asyncio_fix
     async def _individual_scrap(self, session, url, obj, sem):
         async with sem:
             try:
@@ -28,8 +29,8 @@ class Libgen(BaseScraper):
 
                         if poster:
                             obj["poster"] = "http://library.lol" + poster["src"]
-                    except:
-                        ...
+                    except Exception as e:
+                        logger.exception("Error in libgen: {}".format(e))
             except:
                 return None
 

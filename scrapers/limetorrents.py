@@ -3,16 +3,16 @@ import re
 import time
 import aiohttp
 from bs4 import BeautifulSoup
-from scrapers import BaseScraper, HEADER_AIO, decorator_asyncio_fix
-from utils.sites import sites
+from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
 
 
 class Limetorrent(BaseScraper):
-    def __init__(self):
-        self.url = sites.limetorrent.website
-        self.limit = None
+    def __init__(self, website, limit):
+        super().__init__()
+        self.url = website
+        self.limit = limit
 
-    @decorator_asyncio_fix
+    @asyncio_fix
     async def _individual_scrap(self, session, url, obj):
         try:
             async with session.get(url, headers=HEADER_AIO) as res:
@@ -125,7 +125,5 @@ class Limetorrent(BaseScraper):
                     category = "Applications"
                 elif category == "Tv":
                     category = "TV-shows"
-                url = self.url + "/browse-torrents/{}/date/{}/".format(
-                    category, page
-                )
+                url = self.url + "/browse-torrents/{}/date/{}/".format(category, page)
             return await self.parser_result(start_time, url, session)

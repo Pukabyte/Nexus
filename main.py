@@ -14,10 +14,7 @@ app = FastAPI(
     version=VERSION,
     description="On Demand Cache Real-Debrid Indexer",
     docs_url="/docs",
-    contact={
-        "name": "Nexus",
-        "url": "https://github.com/Pukabyte/Nexus"
-    },
+    contact={"name": "Nexus", "url": "https://github.com/Pukabyte/Nexus"},
 )
 
 app.include_router(base)

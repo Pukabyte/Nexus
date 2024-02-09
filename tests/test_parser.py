@@ -6,15 +6,21 @@ from utils.parser import Parser
 def parser():
     return Parser()
 
+
 # Test parser
 def test_fetch(parser):
     # Test fetching
-    parsed_data = parser.parse("The Mandalorian S02E01 2160p WEB-DL DDP5.1 Atmos HDR HEVC-EVO")
+    parsed_data = parser.parse(
+        "The Mandalorian S02E01 2160p WEB-DL DDP5.1 Atmos HDR HEVC-EVO"
+    )
     assert parsed_data["fetch"] == True
+
 
 def test_parse_resolution(parser):
     # Test parsing resolution
-    parsed_data = parser.parse("Casino.1995.MULTi.REMUX.2160p.UHD.Blu-ray.HDR.HEVC.DTS-X7.1-DENDA.mkv")
+    parsed_data = parser.parse(
+        "Casino.1995.MULTi.REMUX.2160p.UHD.Blu-ray.HDR.HEVC.DTS-X7.1-DENDA.mkv"
+    )
     assert parsed_data == {
         "string": "Casino.1995.MULTi.REMUX.2160p.UHD.Blu-ray.HDR.HEVC.DTS-X7.1-DENDA.mkv",
         "title": "Casino",
@@ -38,12 +44,15 @@ def test_parse_resolution(parser):
         "subtitles": False,
         "language": [],
         "remux": True,
-        "extended": []
+        "extended": [],
     }
+
 
 def test_parse_dual_audio(parser):
     # Test parsing dual audio
-    parsed_data = parser.parse("[JySzE] Naruto [v2] [R2J] [VFR] [Dual Audio] [Complete] [Extras] [x264]")
+    parsed_data = parser.parse(
+        "[JySzE] Naruto [v2] [R2J] [VFR] [Dual Audio] [Complete] [Extras] [x264]"
+    )
     assert parsed_data == {
         "string": "[JySzE] Naruto [v2] [R2J] [VFR] [Dual Audio] [Complete] [Extras] [x264]",
         "title": "Naruto",
@@ -67,13 +76,17 @@ def test_parse_dual_audio(parser):
         "subtitles": False,
         "language": [],
         "remux": False,
-        "extended": []
+        "extended": [],
     }
+
 
 def test_parse_complete_series(parser):
     # Test parsing complete series
-    parsed_data = parser.parse("The Sopranos - The Complete Series (Season 1, 2, 3, 4, 5 & 6) + Extras")
+    parsed_data = parser.parse(
+        "The Sopranos - The Complete Series (Season 1, 2, 3, 4, 5 & 6) + Extras"
+    )
     assert parsed_data["is_complete"] == True
+
 
 def test_parse_unwanted_quality(parser):
     # Test parsing unwanted quality
