@@ -1,0 +1,7 @@
+__pycache__
+.env*
+.vscode
+.github
+tests/
+.pytest_cache/
+pytest.ini
