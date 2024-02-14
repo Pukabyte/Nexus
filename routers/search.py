@@ -30,14 +30,12 @@ async def search_torrents(
     if site and site not in sites.keys():
         raise HTTPException(status_code=404, detail=f"Site '{site}' not found.")
 
-    async def search_site(site_name, site_instance):
-        return await site_instance.search(query, page=page, limit=limit)
-
     if site:
-        tasks.append(create_task(sites[site].search(query, page=page, limit=limit)))
+        if site_instance := sites[site]:
+            tasks.append(create_task(site_instance.search(query, page=page, limit=limit)))
     else:
-        for site_name, site_instance in sites.items():
-            tasks.append(create_task(search_site(site_name, site_instance)))
+        for name, site_instance in sites.items():
+            tasks.append(create_task(site_instance.search(query, page=page, limit=limit)))
 
     search_results = await asyncio.gather(*tasks)
     combined_results = {"data": [], "total": 0}

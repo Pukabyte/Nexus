@@ -7,11 +7,17 @@ trending = APIRouter(tags=["Trending Torrents"], prefix="/trending")
 
 @trending.get("/")
 async def get_trending(
-    site: str,
+    site: Optional[str] = None,
     limit: Optional[int] = 0,
     category: Optional[str] = None,
     page: Optional[int] = 1,
 ):
+    if not site:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="The 'site' parameter is missing. Please provide the 'site' parameter in the request URL.",
+        )
+
     site = site.title()
     site_info = sites.get(site)
 

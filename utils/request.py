@@ -1,22 +1,21 @@
 import json
-import logging
-import time
+
 import xmltodict
 import requests
+from logger import logger
 from types import SimpleNamespace
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
-from multiprocessing import Lock
 from lxml import etree
-from threading import Lock
 
-logger = logging.getLogger(__name__)
 
-_retry_strategy = Retry(
-    total=5,
+retry_strategy = Retry(
+    total=2,
     status_forcelist=[500, 502, 503, 504],
 )
-_adapter = HTTPAdapter(max_retries=_retry_strategy)
+adapter = HTTPAdapter(max_retries=retry_strategy)
+
+DEFAULT_HEADERS = {"Content-Type": "application/json", "Accept": "application/json"}
 
 
 class ResponseObject:
@@ -42,12 +41,10 @@ class ResponseObject:
         if len(response.content) > 0:
             if "handler error" not in response.text:
                 content_type = response.headers.get("Content-Type")
-                if "application/rss+xml" in content_type:
-                    return xmltodict.parse(response.content)
-                if "text/xml" in content_type:
+                if "application/rss+xml" in content_type or "text/xml" in content_type:
                     if self.response_type == dict:
                         return xmltodict.parse(response.content)
-                    return _xml_to_simplenamespace(response.content)
+                    return self.xml_to_simplenamespace(response.content)
                 if "application/json" in content_type:
                     if self.response_type == dict:
                         return json.loads(response.content)
@@ -57,13 +54,26 @@ class ResponseObject:
                     )
         return {}
 
+    def xml_to_simplenamespace(self, xml_string):
+        root = etree.fromstring(xml_string)
 
-def _handle_request_exception() -> SimpleNamespace:
+        def element_to_simplenamespace(element):
+            children_as_ns = {
+                child.tag: element_to_simplenamespace(child) for child in element
+            }
+            attributes = {key: value for key, value in element.attrib.items()}
+            attributes.update(children_as_ns)
+            return SimpleNamespace(**attributes, text=element.text)
+
+        return element_to_simplenamespace(root)
+
+
+def handle_request_exception() -> SimpleNamespace:
     logger.error("Request failed", exc_info=True)
     return SimpleNamespace(ok=False, data={}, content={}, status_code=500)
 
 
-def _make_request(
+def make_request(
     method: str,
     url: str,
     data: dict = None,
@@ -74,9 +84,9 @@ def _make_request(
 ) -> ResponseObject:
     session = requests.Session()
     if retry_if_failed:
-        session.mount("http://", _adapter)
-        session.mount("https://", _adapter)
-    headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+    headers = DEFAULT_HEADERS.copy()
     if additional_headers:
         headers.update(additional_headers)
 
@@ -85,7 +95,7 @@ def _make_request(
             method, url, headers=headers, data=data, timeout=timeout
         )
     except requests.RequestException:
-        response = _handle_request_exception()
+        response = handle_request_exception()
 
     session.close()
     return ResponseObject(response, response_type)
@@ -103,7 +113,7 @@ def get(
     retry_if_failed=True,
     response_type=SimpleNamespace,
 ) -> ResponseObject:
-    return _make_request(
+    return make_request(
         "GET",
         url,
         data=data,
@@ -117,7 +127,7 @@ def get(
 def post(
     url: str, data: dict, timeout=10, additional_headers=None, retry_if_failed=False
 ) -> ResponseObject:
-    return _make_request(
+    return make_request(
         "POST",
         url,
         data=data,
@@ -134,7 +144,7 @@ def put(
     additional_headers=None,
     retry_if_failed=False,
 ) -> ResponseObject:
-    return _make_request(
+    return make_request(
         "PUT",
         url,
         data=data,
@@ -142,57 +152,3 @@ def put(
         additional_headers=additional_headers,
         retry_if_failed=retry_if_failed,
     )
-
-
-def _xml_to_simplenamespace(xml_string):
-    root = etree.fromstring(xml_string)
-
-    def element_to_simplenamespace(element):
-        children_as_ns = {
-            child.tag: element_to_simplenamespace(child) for child in element
-        }
-        attributes = {key: value for key, value in element.attrib.items()}
-        attributes.update(children_as_ns)
-        return SimpleNamespace(**attributes, text=element.text)
-
-    return element_to_simplenamespace(root)
-
-
-class RateLimitExceeded(Exception):
-    pass
-
-
-class RateLimiter:
-    def __init__(self, max_calls, period, raise_on_limit=False):
-        self.max_calls = max_calls
-        self.period = period
-        self.tokens = max_calls
-        self.last_call = time.time() - period
-        self.lock = Lock()
-        self.raise_on_limit = raise_on_limit
-
-    def limit_hit(self):
-        self.tokens = 0
-
-    def __enter__(self):
-        with self.lock:
-            current_time = time.time()
-            time_since_last_call = current_time - self.last_call
-
-            if time_since_last_call >= self.period:
-                self.tokens = self.max_calls
-
-            if self.tokens < 1:
-                if self.raise_on_limit:
-                    raise RateLimitExceeded("Rate limit exceeded!")
-                time_to_sleep = self.period - time_since_last_call
-                time.sleep(time_to_sleep)
-                self.last_call = current_time + time_to_sleep
-            else:
-                self.tokens -= 1
-                self.last_call = current_time
-
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass

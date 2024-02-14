@@ -23,7 +23,7 @@ class Apibay(BaseScraper):
     async def search(self, query, page, limit):
         await self._ensure_session()  # Ensure session is ready
         start_time = time.time()
-        url = f"{self.url}/q.php?q={query}&cat=201"
+        url = f"{self.url}/q.php?q={query}"
         data = {"data": [], "total": 0}
 
         try:
@@ -37,10 +37,6 @@ class Apibay(BaseScraper):
                                     "name": item.get("name", "N/A"),  # Provide default values
                                     "info_hash": item.get("info_hash", "N/A"),
                                     "category": item.get("category", "N/A"),
-                                    "details": item.get("details", "N/A"),
-                                    "download": item.get("download", "N/A"),
-                                    "seeders": item.get("seeders", 0),
-                                    "leechers": item.get("leechers", 0),
                                     "size": item.get("size", "N/A")
                                 })
                         data["total"] = len(data["data"])
@@ -59,7 +55,7 @@ class Apibay(BaseScraper):
             return results
         return results
 
-    async def recent(self):
+    async def recent(self, category, page, limit):
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             url = self.url + "/precompiled/data_top100_recent.json"

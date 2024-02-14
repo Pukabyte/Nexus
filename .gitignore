@@ -6,3 +6,5 @@ test.py
 test.json
 .pytest_cache/
 .env
+
+data.*

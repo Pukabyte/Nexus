@@ -32,10 +32,18 @@ def health_route():
 
 @base.get("/sites")
 async def get_all_supported_sites():
-    sites_list = [site for site in sites.keys()]
+    supported_sites = {}
+
+    for site_name, site_info in sites.items():
+        supported_sites[site_name] = {
+            "trending_available": site_info.trending_available,
+            "recent_available": site_info.recent_available,
+            "categories": site_info.categories if hasattr(site_info, "categories") else None
+        }
+
     return error_handler(
         status_code=status.HTTP_200_OK,
         json_message={
-            "supported_sites": sites_list,
+            "supported_sites": supported_sites,
         },
     )

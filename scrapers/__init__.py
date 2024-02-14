@@ -29,18 +29,6 @@ class BaseScraper:
         """Get all results from url"""
         return await asyncio.gather(asyncio.create_task(self._get_html(session, url)))
 
-    async def search(self, query, page, limit):
-        """Search method for searching torrents"""
-        raise NotImplementedError
-
-    async def trending(self, category, page, limit):
-        """Trending method for getting trending torrents"""
-        raise NotImplementedError
-
-    async def recent(self, category, page, limit):
-        """Recent method for getting recent torrents"""
-        raise NotImplementedError
-
 
 def asyncio_fix(func):
     """Decorator for fixing asyncio bug on windows"""

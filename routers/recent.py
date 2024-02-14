@@ -27,18 +27,18 @@ async def get_recent(
 
 
 async def fetch_recent_for_site(site, category, page, limit, all_sites):
-    if site in all_sites and all_sites[site]["recent_available"]:
+    if site in all_sites and getattr(all_sites[site], "recent_available", False):
         limit = (
-            all_sites[site]["limit"]
-            if limit == 0 or limit > all_sites[site]["limit"]
+            all_sites[site].limit
+            if limit == 0 or limit > all_sites[site].limit
             else limit
         )
-        if category and category not in all_sites[site]["categories"]:
+        if category and category not in all_sites[site].categories:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Selected category not available.",
             )
-        return await all_sites[site]["website"]().recent(category, page, limit)
+        return await all_sites[site].recent(category, page, limit)
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -48,10 +48,10 @@ async def fetch_recent_for_site(site, category, page, limit, all_sites):
 
 async def fetch_recent_from_all_sites(limit, all_sites, start_time):
     sites_list = [
-        site for site, config in all_sites.items() if config["recent_available"]
+        site for site, config in all_sites.items() if config.recent_available
     ]
     tasks = [
-        asyncio.create_task(all_sites[site]["website"]().recent(None, 1, limit))
+        asyncio.create_task(all_sites[site].recent(None, 1, limit))
         for site in sites_list
     ]
     results = await asyncio.gather(*tasks)
@@ -69,3 +69,4 @@ async def fetch_recent_from_all_sites(limit, all_sites, start_time):
         )
 
     return COMBO
+
