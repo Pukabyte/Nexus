@@ -42,21 +42,8 @@ class Apibay(BaseScraper):
                         data["total"] = len(data["data"])
         except Exception as e:
             logger.error(f"Exception during search: {e}")
+        finally:
+            await self.close()
 
         data["time"] = time.time() - start_time
         return data
-
-    async def parser_result(self, start_time, url, session):
-        html = await self.get_all_results(session, url)
-        results = self._parser(html)
-        if results is not None:
-            results["time"] = time.time() - start_time
-            results["total"] = len(results["data"])
-            return results
-        return results
-
-    async def recent(self, category, page, limit):
-        async with aiohttp.ClientSession() as session:
-            start_time = time.time()
-            url = self.url + "/precompiled/data_top100_recent.json"
-            return await self.parser_result(start_time, url, session)

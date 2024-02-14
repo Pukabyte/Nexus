@@ -3,6 +3,7 @@ import asyncio
 from fastapi import APIRouter, status, HTTPException
 from typing import Optional
 from utils.sites import sites
+from utils.logger import logger
 
 
 recent = APIRouter(tags=["Recent Torrents Route"], prefix="/recent")
@@ -47,13 +48,15 @@ async def fetch_recent_for_site(site, category, page, limit, all_sites):
 
 
 async def fetch_recent_from_all_sites(limit, all_sites, start_time):
-    sites_list = [
-        site for site, config in all_sites.items() if config.recent_available
-    ]
-    tasks = [
-        asyncio.create_task(all_sites[site].recent(None, 1, limit))
-        for site in sites_list
-    ]
+    tasks = []
+    for site, config in all_sites.items():
+        if getattr(config, "recent_available", False):
+            if hasattr(config, "recent"):
+                tasks.append(config.recent(None, 1, limit))
+            else:
+                logger.error(f"Scraper not implemented for recent: {site}")
+        else:
+            logger.error(f"Recent search not available for {site}.")
     results = await asyncio.gather(*tasks)
 
     COMBO = {"data": [], "total": 0, "time": 0}
@@ -69,4 +72,3 @@ async def fetch_recent_from_all_sites(limit, all_sites, start_time):
         )
 
     return COMBO
-

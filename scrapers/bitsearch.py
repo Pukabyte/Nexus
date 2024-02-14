@@ -18,22 +18,20 @@ class BitSearch(BaseScraper):
 
                 my_dict = {"data": []}
                 for divs in soup.find_all("li", class_="search-result"):
+                    if len(my_dict["data"]) == self.limit:
+                        break               
                     info = divs.find("div", class_="info")
                     name = info.find("h5", class_="title").find("a").text
-                    url = info.find("h5", class_="title").find("a")["href"]
                     category = info.find("div").find("a", class_="category").text
                     if not category:
                         continue
                     stats = info.find("div", class_="stats").find_all("div")
                     if stats:
-                        downloads = stats[0].text
                         size = stats[1].text
                         seeders = stats[2].text.strip()
                         leechers = stats[3].text.strip()
-                        date = stats[4].text
                         links = divs.find("div", class_="links").find_all("a")
                         magnet = links[1]["href"]
-                        torrent = links[0]["href"]
                         my_dict["data"].append(
                             {
                                 "name": name,
@@ -44,11 +42,6 @@ class BitSearch(BaseScraper):
                                 "hash": re.search(
                                     r"([{a-f\d,A-F\d}]{32,40})\b", magnet
                                 ).group(0),
-                                "magnet": magnet,
-                                "torrent": torrent,
-                                "url": self.url + url,
-                                "date": date,
-                                "downloads": downloads,
                             }
                         )
                     if len(my_dict["data"]) == self.limit:

@@ -15,7 +15,8 @@ class BaseScraper:
     """Scraper class for scraping html"""
 
     def __init__(self):
-        pass
+        self.time = 0
+        self.total = 0
 
     @asyncio_fix
     async def _get_html(self, session, url):
@@ -41,5 +42,4 @@ def asyncio_fix(func):
         ):
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         return func(*args)
-
     return wrapper

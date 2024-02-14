@@ -13,7 +13,7 @@ class SiteInfo(BaseModel):
     recent_available: bool = False
     recent_category_available: bool = False
     categories: Optional[List[str]] = False
-    limit: int = 10
+    limit: int = 25
     scraper_module: Optional[str] = None
     scraper_class: Optional[str] = None
 
@@ -30,16 +30,12 @@ class SiteInfo(BaseModel):
         scraper_instance = self.get_scraper_instance()
         if scraper_instance and hasattr(scraper_instance, "recent"):
             return await scraper_instance.recent(category, page, limit)
-        else:
-            raise NotImplementedError("Scraper not implemented for recent.")
 
     async def trending(self, category: str, page: int, limit: int):
         """Get trending torrents."""
         scraper_instance = self.get_scraper_instance()
         if scraper_instance and hasattr(scraper_instance, "trending"):
             return await scraper_instance.trending(category, page, limit)
-        else:
-            raise NotImplementedError("Scraper not implemented for trending.")
 
     async def search_by_category(
         self, query: str, category: str, page: int, limit: int
@@ -48,8 +44,6 @@ class SiteInfo(BaseModel):
         scraper_instance = self.get_scraper_instance()
         if scraper_instance and hasattr(scraper_instance, "category"):
             return await scraper_instance.category(query, category, page, limit)
-        else:
-            raise NotImplementedError("Scraper not implemented for category search.")
 
     def get_scraper_instance(self):
         """Returns an instance of the scraper class."""
@@ -266,6 +260,19 @@ class Torrentfunk(SiteInfo):
     scraper_class: str = "TorrentFunk"
 
 
+class Glodls(SiteInfo):
+    """`TorrentFunk.com` Site Info"""
+
+    website: str = "https://glodls.to"
+    trending_available: bool = True
+    trending_category: bool = False
+    recent_available: bool = True
+    recent_category_available: bool = False
+    scraper_module: str = "scrapers.glodls"
+    scraper_class: str = "Glodls"
+    limit: int = 25
+
+
 class Torrentproject(SiteInfo):
     """`TorrentProject2.com` Site Info"""
 
@@ -311,6 +318,7 @@ class Sites(BaseModel):
     libgen: Libgen = Libgen()   # Broken ?
     yts: Yts = Yts()
     limetorrent: Limetorrent = Limetorrent()
+    glodls: Glodls = Glodls()
     torrentfunk: Torrentfunk = Torrentfunk()
     torrentproject: Torrentproject = Torrentproject()   # Soup needs updating probably, no results
     yourbittorrent: Yourbittorrent = Yourbittorrent()
