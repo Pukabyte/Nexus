@@ -205,12 +205,6 @@ class Kickass(SiteInfo):
     scraper_class: str = "Kickass"
 
 
-class Libgen(SiteInfo):
-    """`Libgen.is` Site Info"""
-
-    website: str = "https://libgen.is"
-
-
 class Yts(SiteInfo):
     """`Yts.mx` Site Info"""
 
@@ -315,7 +309,6 @@ class Sites(BaseModel):
     piratebay: Piratebay = Piratebay()
     bitsearch: Bitsearch = Bitsearch()
     kickass: Kickass = Kickass()
-    libgen: Libgen = Libgen()   # Broken ?
     yts: Yts = Yts()
     limetorrent: Limetorrent = Limetorrent()
     glodls: Glodls = Glodls()
