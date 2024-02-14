@@ -15,14 +15,6 @@ class TorrentGalaxy(BaseScraper):
         try:
             soup = BeautifulSoup(html[0], "html.parser")
             my_dict = {"data": []}
-            root_div = soup.find("div", class_="gluewrapper")
-            post_nd_torrents = root_div.find_next("div").find_all("div")
-            poster = post_nd_torrents[1].find("img")["data-src"]
-            torrentsand_all = post_nd_torrents[4].find_all("a")
-            torrent_link = torrentsand_all[0]["href"]
-            magnet_link = torrentsand_all[1]["href"]
-            direct_link = self.url + torrentsand_all[2]["href"]
-
             details_root = soup.find("div", class_="gluewrapper").select(
                 "div > :nth-child(2) > div > .tprow"
             )
@@ -34,47 +26,23 @@ class TorrentGalaxy(BaseScraper):
             languagee = details_root[4].find_all("div")[-1].get_text(strip=True)
             size = details_root[5].find_all("div")[-1].get_text(strip=True)
             hash = details_root[6].find_all("div")[-1].get_text(strip=True)
-            username = (
-                details_root[7]
-                .find_all("div")[-1]
-                .find("span", class_="username")
-                .get_text(strip=True)
-            )
-            date_up = details_root[8].find_all("div")[-1].get_text(strip=True)
-
             btns = details_root[10].find_all("button")
             seeders = btns[0].find("span").get_text(strip=True)
             leechers = btns[1].find("span").get_text(strip=True)
-            downloads = btns[2].find("span").get_text(strip=True)
-            imdb_id = soup.select_one("#imdbpage")["href"].split("/")[-1]
             genre_list = [
                 x.get_text(strip=True) for x in details_root[11].find_all("a")
             ]
             soup.find("div", id="intblockslide").find_all("a")
-            imgs = [
-                img["href"]
-                for img in (soup.find("div", id="intblockslide").find_all("a"))
-                if img["href"].endswith((".png", ".jpg", ".jpeg"))
-            ]
             my_dict["data"].append(
                 {
                     "name": name,
+                    "hash": hash,
                     "size": size,
                     "seeders": seeders,
-                    "language": languagee,
                     "leechers": leechers,
+                    "language": languagee,
                     "category": category,
-                    "uploader": username,
-                    "downloads": downloads,
-                    "poster": poster,
-                    "direct_download_link": direct_link,
-                    "imdb_id": imdb_id,
-                    "hash": hash,
-                    "magnet": magnet_link,
-                    "torrent": torrent_link,
-                    "screenshot": imgs,
                     "genre": genre_list,
-                    "date": date_up,
                 }
             )
             return my_dict
@@ -91,30 +59,17 @@ class TorrentGalaxy(BaseScraper):
                     div = divs.find_all("div")
                     try:
                         name = div[4].find("a").get_text(strip=True)
-                        imdb_url = (div[4].find_all("a"))[-1]["href"]
                     except:
                         name = (div[1].find("a", class_="txlight")).find("b").text
-                        imdb_url = (div[1].find_all("a"))[-1]["href"]
-
                     if name != "":
                         try:
                             magnet = div[5].find_all("a")[1]["href"]
-                            torrent = div[5].find_all("a")[0]["href"]
                         except:
                             magnet = div[3].find_all("a")[1]["href"]
-                            torrent = div[3].find_all("a")[0]["href"]
                         size = soup.select("span.badge.badge-secondary.txlight")[
                             idx
                         ].text
                         try:
-                            url = div[4].find("a")["href"]
-                        except:
-                            url = div[1].find("a", class_="txlight")["href"]
-                        try:
-                            date = div[12].get_text(strip=True)
-                        except:
-                            date = div[10].get_text(strip=True)
-                        try:
                             seeders_leechers = div[11].find_all("b")
                             seeders = seeders_leechers[0].text
                             leechers = seeders_leechers[1].text
@@ -122,10 +77,6 @@ class TorrentGalaxy(BaseScraper):
                             seeders_leechers = div[11].find_all("b")
                             seeders = seeders_leechers[0].text
                             leechers = seeders_leechers[1].text
-                        try:
-                            uploader = (div[7].find("a")).find("span").text
-                        except:
-                            uploader = (div[5].find("a")).find("span").text
                         try:
                             category = (
                                 div[0].find("small").text.replace("&nbsp", "")
@@ -135,19 +86,13 @@ class TorrentGalaxy(BaseScraper):
                         my_dict["data"].append(
                             {
                                 "name": name,
+                                "hash": re.search(
+                                    r"([{a-f\d,A-F\d}]{32,40})\b", magnet
+                                ).group(0),
                                 "size": size,
                                 "seeders": seeders,
                                 "leechers": leechers,
                                 "category": category,
-                                "uploader": uploader,
-                                "imdb_id": imdb_url.split("=")[-1],
-                                "hash": re.search(
-                                    r"([{a-f\d,A-F\d}]{32,40})\b", magnet
-                                ).group(0),
-                                "magnet": magnet,
-                                "torrent": torrent,
-                                "url": self.url + url,
-                                "date": date,
                             }
                         )
                     if len(my_dict["data"]) == self.limit:
@@ -223,5 +168,3 @@ class TorrentGalaxy(BaseScraper):
                     )
                 )
             return await self.parser_result(start_time, url, session)
-
-    #! Maybe Implemented in Future

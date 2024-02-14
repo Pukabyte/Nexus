@@ -304,7 +304,7 @@ class Sites(BaseModel):
     torlock: Torlock = Torlock()
     zooqle: Zooqle = Zooqle()  # No results. Not sure whats wrong, probably soup needs updated.
     magnetdl: MagnetDL = MagnetDL()
-    torrentgalaxy: Torrentgalaxy = Torrentgalaxy()    # No results. Uses captcha I believe?
+    torrentgalaxy: Torrentgalaxy = Torrentgalaxy()
     nyaa: NyaaSi = NyaaSi()
     piratebay: Piratebay = Piratebay()
     bitsearch: Bitsearch = Bitsearch()
