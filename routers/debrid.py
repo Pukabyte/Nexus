@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, Request, status
 from fastapi.responses import JSONResponse
 from utils.realdebrid import realdebrid
+from utils.logger import logger
 from utils import error_handler
 
 
@@ -53,5 +54,7 @@ def instant_availability(req: Request, hashes: str = Query(...)):
             data = response.json()
             results[hash] = data
         else:
-            results[hash] = error_handler.parse_error(response)
+            # Handle the error directly
+            logger.error(f"Error checking availability for hash {hash}: {response.text}")
+            results[hash] = {"error": "Failed to check availability"}
     return JSONResponse({"status": "OK", "data": results})
