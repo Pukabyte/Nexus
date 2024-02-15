@@ -5,13 +5,13 @@ services:
     image: pukabyte/nexus:latest
     build: .
     container_name: nexus
-    restart: no
+    restart: unless-stopped
     ports:
       - "8978:8978"
     environment:
       PUID: 1000
       PGID: 1000
-      RD_KEY: ${RD_KEY:-YOUR_RD_KEY}
+      RD_APITOKEN: ${RD_KEY:-YOUR_RD_KEY}
     networks:
       - nexus
 
