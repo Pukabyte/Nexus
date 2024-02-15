@@ -29,7 +29,7 @@ RUN python3 -m venv /venv && \
 RUN chmod +x ./entrypoint.sh
 
 EXPOSE 8978
-ARG RD_KEY
-ENV RD_KEY=$RD_KEY
+ARG RD_APITOKEN
+ENV RD_APITOKEN=$RD_APITOKEN
 
 ENTRYPOINT ["/app/entrypoint.sh"]
