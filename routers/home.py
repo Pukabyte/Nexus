@@ -36,14 +36,26 @@ async def get_all_supported_sites():
 
     for site_name, site_info in sites.items():
         supported_sites[site_name] = {
+            "website": site_info.website,
             "trending_available": site_info.trending_available,
+            "trending_category": site_info.trending_category,
             "recent_available": site_info.recent_available,
-            "categories": site_info.categories if hasattr(site_info, "categories") else None
+            "recent_category_available": site_info.recent_category_available,
+            "limit": site_info.limit,
+            "categories": site_info.categories if hasattr(site_info, "categories") else []
         }
 
     return error_handler(
         status_code=status.HTTP_200_OK,
         json_message={
-            "supported_sites": supported_sites,
+            "sites": supported_sites,
         },
+    )
+
+@base.get("/rss")
+async def rss_feed():
+    return JSONResponse(
+        {
+            "message": "RSS Feed is not available yet",
+        }
     )

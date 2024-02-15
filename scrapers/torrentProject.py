@@ -4,6 +4,7 @@ import aiohttp
 import requests
 from bs4 import BeautifulSoup
 from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
+from utils.logger import logger
 
 
 class TorrentProject(BaseScraper):
@@ -29,6 +30,9 @@ class TorrentProject(BaseScraper):
                         index_of_magnet = magnet.index("magnet")
                         magnet = requests.utils.unquote(magnet[index_of_magnet:])
                         obj["magnet"] = magnet
+                        obj["infohash"] = magnet.split(":")[-1]
+                        obj["site"] = self.url
+                        obj.pop("url")
                     except:
                         ...
             except:
@@ -58,19 +62,10 @@ class TorrentProject(BaseScraper):
                     name = span[0].find("a").text
                     url = self.url + span[0].find("a")["href"]
                     list_of_urls.append(url)
-                    seeders = span[2].text
-                    leechers = span[3].text
-                    date = span[4].text
-                    size = span[5].text
-
                     my_dict["data"].append(
                         {
                             "name": name,
-                            "size": size,
-                            "date": date,
-                            "seeders": seeders,
-                            "leechers": leechers,
-                            "url": url,
+                            "url": url
                         }
                     )
                     if len(my_dict["data"]) == self.limit:
@@ -83,7 +78,9 @@ class TorrentProject(BaseScraper):
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             self.limit = limit
-            url = self.url + "/?t={}&p={}".format(query, page - 1)
+            query = query.replace(" ", "+")
+            url = self.url + "/?t={}&orderby=seeders".format(query)
+            logger.info(f"Searching for {query.replace("+", " ")} at {url}")
             return await self.parser_result(start_time, url, session)
 
     async def parser_result(self, start_time, url, session):

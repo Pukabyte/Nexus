@@ -7,6 +7,8 @@ from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
 
 
 class Limetorrent(BaseScraper):
+    """`Limetorrent` scraper class"""
+
     def __init__(self, website, limit):
         super().__init__()
         self.url = website
@@ -14,23 +16,25 @@ class Limetorrent(BaseScraper):
 
     @asyncio_fix
     async def _individual_scrap(self, session, url, obj):
+        """Scrap individual torrent page for magnet, torrent, hash"""
         try:
             async with session.get(url, headers=HEADER_AIO) as res:
                 html = await res.text(encoding="ISO-8859-1")
                 soup = BeautifulSoup(html, "html.parser")
                 try:
                     a_tag = soup.find_all("a", class_="csprite_dltorrent")
-                    obj["torrent"] = a_tag[0]["href"]
-                    obj["magnet"] = a_tag[-1]["href"]
-                    obj["hash"] = re.search(
-                        r"([{a-f\d,A-F\d}]{32,40})\b", obj["magnet"]
+                    obj["infohash"] = re.search(
+                        r"([{a-f\d,A-F\d}]{40})\b", a_tag[-1]["href"]
                     ).group(0)
+                    obj["site"] = self.url
+                    obj.pop("url")
                 except:
                     ...
         except:
             return None
 
     async def _get_torrent(self, result, session, urls):
+        """Get the torrent from individual torrent page"""
         tasks = []
         for idx, url in enumerate(urls):
             for obj in result["data"]:
@@ -43,6 +47,7 @@ class Limetorrent(BaseScraper):
         return result
 
     def _parser(self, htmls, idx=0):
+        """Parse the result from the given HTML."""
         try:
             for html in htmls:
                 soup = BeautifulSoup(html, "html.parser")
@@ -56,20 +61,9 @@ class Limetorrent(BaseScraper):
                     name = td[0].get_text(strip=True)
                     url = self.url + td[0].find_all("a")[-1]["href"]
                     list_of_urls.append(url)
-                    added_on_and_category = td[1].get_text(strip=True)
-                    date = (added_on_and_category.split("-")[0]).strip()
-                    category = (added_on_and_category.split("in")[-1]).strip()
-                    size = td[2].text
-                    seeders = td[3].text
-                    leechers = td[4].text
                     my_dict["data"].append(
                         {
                             "name": name,
-                            "size": size,
-                            "date": date,
-                            "category": category if category != date else None,
-                            "seeders": seeders,
-                            "leechers": leechers,
                             "url": url,
                         }
                     )
@@ -89,14 +83,8 @@ class Limetorrent(BaseScraper):
         except:
             return None, None
 
-    async def search(self, query, page, limit):
-        async with aiohttp.ClientSession() as session:
-            start_time = time.time()
-            self.limit = limit
-            url = self.url + "/search/all/{}//{}".format(query, page)
-            return await self.parser_result(start_time, url, session, idx=5)
-
     async def parser_result(self, start_time, url, session, idx=0):
+        """Parse the result from the given URL."""
         htmls = await self.get_all_results(session, url)
         result, urls = self._parser(htmls, idx)
         if result is not None:
@@ -106,7 +94,17 @@ class Limetorrent(BaseScraper):
             return results
         return result
 
+    async def search(self, query, page, limit):
+        """Search torrents from `Limetorrent`."""
+        async with aiohttp.ClientSession() as session:
+            start_time = time.time()
+            self.limit = limit
+            url = self.url + "/search/all/{}//{}".format(query, page)
+            return await self.parser_result(start_time, url, session, idx=5)
+
+
     async def trending(self, category, page, limit):
+        """Get trending torrents from `Limetorrent`."""
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             self.limit = limit
@@ -114,6 +112,7 @@ class Limetorrent(BaseScraper):
             return await self.parser_result(start_time, url, session)
 
     async def recent(self, category, page, limit):
+        """Get recent torrents from `Limetorrent`."""
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             self.limit = limit

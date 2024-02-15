@@ -3,6 +3,8 @@ import re
 import time
 import aiohttp
 from bs4 import BeautifulSoup
+from utils.request import get
+from utils.logger import logger
 from scrapers import BaseScraper
 
 
@@ -21,31 +23,15 @@ class NyaaSi(BaseScraper):
                 for tr in (soup.find("table")).find_all("tr")[1:]:
                     td = tr.find_all("td")
                     name = td[1].find_all("a")[-1].text
-                    url = td[1].find_all("a")[-1]["href"]
                     magnet_and_torrent = td[2].find_all("a")
                     magnet = magnet_and_torrent[-1]["href"]
-                    torrent = self.url + magnet_and_torrent[0]["href"]
-                    size = td[3].text
-                    date = td[4].text
-                    seeders = td[5].text
-                    leechers = td[6].text
-                    downloads = td[7].text
-                    category = td[0].find("a")["title"].split("-")[0].strip()
                     my_dict["data"].append(
                         {
                             "name": name,
-                            "size": size,
-                            "seeders": seeders,
-                            "leechers": leechers,
-                            "category": category,
-                            "hash": re.search(
-                                r"([{a-f\d,A-F\d}]{32,40})\b", magnet
+                            "infohash": re.search(
+                                r"([{a-f\d,A-F\d}]{40})\b", magnet
                             ).group(0),
-                            "magnet": magnet,
-                            "torrent": torrent,
-                            "url": self.url + url,
-                            "date": date,
-                            "downloads": downloads,
+                            "url": self.url,
                         }
                     )
                     if len(my_dict["data"]) == self.limit:
@@ -63,13 +49,6 @@ class NyaaSi(BaseScraper):
                 return my_dict
         except:
             return None
-
-    async def search(self, query, page, limit):
-        async with aiohttp.ClientSession() as session:
-            start_time = time.time()
-            self.limit = limit
-            url = self.url + "/?f=0&c=0_0&q={}&p={}".format(query, page)
-            return await self.parser_result(start_time, url, session)
 
     async def parser_result(self, start_time, url, session, retry_count=0):
         try:
@@ -94,6 +73,13 @@ class NyaaSi(BaseScraper):
             else:
                 print("Unexpected error occurred:", e)
                 return None
+
+    async def search(self, query, page, limit):
+        async with aiohttp.ClientSession() as session:
+            start_time = time.time()
+            self.limit = limit
+            url = self.url + "/?f=0&c=0_0&q={}".format(query)
+            return await self.parser_result(start_time, url, session)
 
     async def recent(self, category, page, limit):
         async with aiohttp.ClientSession() as session:

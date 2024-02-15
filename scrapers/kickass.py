@@ -8,12 +8,16 @@ from utils.logger import logger
 
 
 class Kickass(BaseScraper):
+    """`Kickass` scraper class"""
+
     def __init__(self, website, limit):
         super().__init__()
         self.url = website
         self.limit = limit
 
+    @asyncio_fix
     async def _individual_scrap(self, session, url, obj):
+        """Scrap individual torrent page for name, infohash"""
         try:
             async with session.get(url, headers=HEADER_AIO) as res:
                 html = await res.text(encoding="ISO-8859-1")
@@ -33,6 +37,7 @@ class Kickass(BaseScraper):
             return None
 
     async def _get_torrent(self, result, session, urls):
+        """Get the torrent from individual torrent page"""
         tasks = []
         for idx, url in enumerate(urls):
             task = asyncio.create_task(
@@ -43,6 +48,7 @@ class Kickass(BaseScraper):
         return result
 
     def _parser(self, htmls):
+        """Parse the result from the given HTML."""
         try:
             my_dict = {"data": []}
             list_of_urls = []
@@ -62,6 +68,7 @@ class Kickass(BaseScraper):
             return None, None
 
     async def parser_result(self, url, session):
+        """Parse the result from the given URL."""
         start_time = time.time()
         htmls = await self.get_all_results(session, url)
         result, urls = self._parser(htmls)
@@ -77,6 +84,7 @@ class Kickass(BaseScraper):
         return result
 
     def _build_url(self, category, path):
+        """Build the URL based on the category and path."""
         if category:
             if category == "tv":
                 category = "television"
@@ -86,18 +94,21 @@ class Kickass(BaseScraper):
         return f"{self.url}/{path}/"
 
     async def search(self, query, page, limit):
+        """Search torrents from `Kickass`."""
         async with aiohttp.ClientSession() as session:
             self.limit = limit
             url = f"{self.url}/usearch/{query}/{page}/"
             return await self.parser_result(url, session)
 
     async def trending(self, category, page, limit):
+        """Get trending torrents from `Kickass`."""
         async with aiohttp.ClientSession() as session:
             self.limit = limit
             url = self._build_url(category, "top-100")
             return await self.parser_result(url, session)
 
     async def recent(self, category, page, limit):
+        """Get recent torrents from `Kickass`."""
         async with aiohttp.ClientSession() as session:
             self.limit = limit
             url = self._build_url(category, "new")

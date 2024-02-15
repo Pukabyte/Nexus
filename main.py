@@ -1,12 +1,14 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from utils.settings import VERSION
+
 from routers.home import base
 from routers.search import search
 from routers.trending import trending
-from routers.category import category
 from routers.recent import recent
-from utils.settings import VERSION
+from routers.debrid import rdebrid
+
 
 
 app = FastAPI(
@@ -20,8 +22,8 @@ app = FastAPI(
 app.include_router(base)
 app.include_router(search)
 app.include_router(trending)
-app.include_router(category)
 app.include_router(recent)
+app.include_router(rdebrid)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

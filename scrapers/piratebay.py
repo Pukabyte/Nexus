@@ -24,39 +24,21 @@ class PirateBay(BaseScraper):
                     except:
                         name = None
                     if name:
-                        url = td[1].find("div").find("a")["href"]
-                        magnet = td[1].find_all("a")[1]["href"]
-                        seeders = td[2].text
-                        leechers = td[3].text
-                        mixed = td[1].find_all("font")[0].text
-                        mixed = re.sub(r"(Uploaded|Size|ULed by)", "", mixed).split(",")
                         category = td[0].find_all("a")[0].text
+                        if category != "Video":
+                            continue
+                        magnet = td[1].find_all("a")[1]["href"]
                         my_dict["data"].append(
                             {
                                 "name": name,
-                                "size": mixed[1].strip(),
-                                "seeders": seeders,
-                                "leechers": leechers,
-                                "category": category,
-                                "uploader": mixed[-1].strip(),
-                                "url": url,
-                                "date": mixed[0].strip(),
-                                "hash": re.search(
-                                    r"([{a-f\d,A-F\d}]{32,40})\b", magnet
+                                "infohash": re.search(
+                                    r"([{a-f\d,A-F\d}]{40})\b", magnet
                                 ).group(0),
-                                "magnet": magnet,
+                                "site": self.url,
                             }
                         )
                     if len(my_dict["data"]) == self.limit:
                         break
-                last_tr = soup.find_all("tr")[-1]
-                check_if_pagination_available = last_tr.find("td").find("center")
-                if not check_if_pagination_available:
-                    current_page = last_tr.find("td").find("b").text
-                    my_dict["current_page"] = int(current_page)
-                    my_dict["total_pages"] = int(
-                        last_tr.find("td").find_all("a")[-2].text
-                    )
                 return my_dict
         except:
             return None

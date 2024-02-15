@@ -2,7 +2,7 @@ import json
 
 import xmltodict
 import requests
-from logger import logger
+from utils import logger
 from types import SimpleNamespace
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
@@ -28,7 +28,7 @@ class ResponseObject:
 
     def handle_response(self, response: requests.Response):
         if not self.is_ok and self.status_code not in [429, 520, 522, 401]:
-            logger.warning("Error: %s %s", response.status_code, response.content)
+            logger.warning("Error %s: %s", response.status_code, response.content)
         if self.status_code in [520, 522]:
             raise requests.exceptions.ConnectTimeout(response.content)
         if self.status_code not in [200, 201, 204]:

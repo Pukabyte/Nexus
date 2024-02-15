@@ -15,34 +15,23 @@ class TorrentGalaxy(BaseScraper):
         try:
             soup = BeautifulSoup(html[0], "html.parser")
             my_dict = {"data": []}
-            details_root = soup.find("div", class_="gluewrapper").select(
+            root = soup.find("div", class_="gluewrapper").select(
                 "div > :nth-child(2) > div > .tprow"
             )
 
-            name = details_root[0].find_all("div")[-1].get_text(strip=True)
+            name = root[0].find_all("div")[-1].get_text(strip=True)
             category = (
-                details_root[3].find_all("div")[-1].get_text(strip=True).split(">")[0]
+                root[3].find_all("div")[-1].get_text(strip=True).split(">")[0]
             )
-            languagee = details_root[4].find_all("div")[-1].get_text(strip=True)
-            size = details_root[5].find_all("div")[-1].get_text(strip=True)
-            hash = details_root[6].find_all("div")[-1].get_text(strip=True)
-            btns = details_root[10].find_all("button")
-            seeders = btns[0].find("span").get_text(strip=True)
-            leechers = btns[1].find("span").get_text(strip=True)
-            genre_list = [
-                x.get_text(strip=True) for x in details_root[11].find_all("a")
-            ]
+            if category != "XXX":
+                return None
+            infohash = root[6].find_all("div")[-1].get_text(strip=True)
             soup.find("div", id="intblockslide").find_all("a")
             my_dict["data"].append(
                 {
                     "name": name,
-                    "hash": hash,
-                    "size": size,
-                    "seeders": seeders,
-                    "leechers": leechers,
-                    "language": languagee,
-                    "category": category,
-                    "genre": genre_list,
+                    "infohash": infohash,
+                    "site": self.url
                 }
             )
             return my_dict
@@ -53,9 +42,8 @@ class TorrentGalaxy(BaseScraper):
         try:
             for html in htmls:
                 soup = BeautifulSoup(html, "html.parser")
-
                 my_dict = {"data": []}
-                for idx, divs in enumerate(soup.find_all("div", class_="tgxtablerow")):
+                for _, divs in enumerate(soup.find_all("div", class_="tgxtablerow")):
                     div = divs.find_all("div")
                     try:
                         name = div[4].find("a").get_text(strip=True)
@@ -66,35 +54,18 @@ class TorrentGalaxy(BaseScraper):
                             magnet = div[5].find_all("a")[1]["href"]
                         except:
                             magnet = div[3].find_all("a")[1]["href"]
-                        size = soup.select("span.badge.badge-secondary.txlight")[
-                            idx
-                        ].text
-                        try:
-                            seeders_leechers = div[11].find_all("b")
-                            seeders = seeders_leechers[0].text
-                            leechers = seeders_leechers[1].text
-                        except:
-                            seeders_leechers = div[11].find_all("b")
-                            seeders = seeders_leechers[0].text
-                            leechers = seeders_leechers[1].text
-                        try:
-                            category = (
-                                div[0].find("small").text.replace("&nbsp", "")
-                            ).split(":")[0]
-                        except:
-                            category = None
-                        my_dict["data"].append(
-                            {
-                                "name": name,
-                                "hash": re.search(
-                                    r"([{a-f\d,A-F\d}]{32,40})\b", magnet
-                                ).group(0),
-                                "size": size,
-                                "seeders": seeders,
-                                "leechers": leechers,
-                                "category": category,
-                            }
-                        )
+                        category = (
+                            div[0].find("small").text.replace("&nbsp", "")
+                        ).split(":")[0].strip()
+                        if category not in ["XXX", "Books", "Games"]:
+                            my_dict["data"].append(
+                                {
+                                    "name": name,
+                                    "infohash": re.search(
+                                        r"([{a-f\d,A-F\d}]{40})\b", magnet
+                                    ).group(0),
+                                    "site": self.url
+                                })
                     if len(my_dict["data"]) == self.limit:
                         break
                 try:
@@ -107,9 +78,7 @@ class TorrentGalaxy(BaseScraper):
                     )
                     my_dict["total_pages"] = int(tpages.find("a").text)
                 except:
-                    my_dict["current_page"] = None
-                    my_dict["total_pages"] = None
-                    # ...
+                    ...
                 return my_dict
         except:
             return None

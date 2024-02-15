@@ -6,7 +6,7 @@ from utils.sites import sites
 from utils.logger import logger
 
 
-recent = APIRouter(tags=["Recent Torrents Route"], prefix="/recent")
+recent = APIRouter(tags=["Recent Torrents"], prefix="/recent")
 
 
 @recent.get("/")

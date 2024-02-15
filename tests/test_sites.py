@@ -1,5 +1,4 @@
 import pytest
-import httpx
 from requests.exceptions import RequestException, ReadTimeout
 from utils.request import ping
 from utils.sites import sites
@@ -8,7 +7,7 @@ from utils.sites import sites
 @pytest.mark.asyncio
 async def test_sites_total():
     try:
-        assert len(sites) == 11
+        assert len(sites) == 16
     except AssertionError:
         pytest.fail("Number of sites has changed. Update the tests.")
 

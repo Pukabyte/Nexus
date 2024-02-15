@@ -6,12 +6,15 @@ from scrapers import BaseScraper
 
 
 class BitSearch(BaseScraper):
+    """`BitSearch` scraper class"""
+
     def __init__(self, website, limit):
         super().__init__()
         self.url = website
         self.limit = limit
 
     def _parser(self, htmls):
+        """Parse the result from the given HTML."""
         try:
             for html in htmls:
                 soup = BeautifulSoup(html, "html.parser")
@@ -27,21 +30,15 @@ class BitSearch(BaseScraper):
                         continue
                     stats = info.find("div", class_="stats").find_all("div")
                     if stats:
-                        size = stats[1].text
-                        seeders = stats[2].text.strip()
-                        leechers = stats[3].text.strip()
                         links = divs.find("div", class_="links").find_all("a")
                         magnet = links[1]["href"]
                         my_dict["data"].append(
                             {
                                 "name": name,
-                                "size": size,
-                                "seeders": seeders,
-                                "leechers": leechers,
-                                "category": category,
-                                "hash": re.search(
+                                "infohash": re.search(
                                     r"([{a-f\d,A-F\d}]{32,40})\b", magnet
                                 ).group(0),
+                                "site": self.url
                             }
                         )
                     if len(my_dict["data"]) == self.limit:
@@ -77,6 +74,7 @@ class BitSearch(BaseScraper):
             return None
 
     async def search(self, query, page, limit):
+        """Search torrents from `BitSearch`."""
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             self.limit = limit
@@ -84,6 +82,7 @@ class BitSearch(BaseScraper):
             return await self.parser_result(start_time, url, session)
 
     async def parser_result(self, start_time, url, session):
+        """Parse the result from the given URL."""
         html = await self.get_all_results(session, url)
         results = self._parser(html)
         if results is not None:
@@ -93,6 +92,7 @@ class BitSearch(BaseScraper):
         return results
 
     async def trending(self, category, page, limit):
+        """Show trending torrents from `BitSearch`."""
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             self.limit = limit

@@ -1,6 +1,9 @@
+import aiohttp
 from pydantic import BaseModel
-from typing import Dict, List, Optional, Union
+from typing import ClassVar, Dict, List, Optional, Union
 from scrapers import *
+from utils.logger import logger
+from utils.request import ping
 
 
 class SiteInfo(BaseModel):
@@ -12,8 +15,8 @@ class SiteInfo(BaseModel):
     search_by_category: bool = False
     recent_available: bool = False
     recent_category_available: bool = False
-    categories: Optional[List[str]] = False
-    limit: int = 25
+    categories: Optional[List[str]] = []
+    limit: int = 10
     scraper_module: Optional[str] = None
     scraper_class: Optional[str] = None
 
@@ -53,6 +56,19 @@ class SiteInfo(BaseModel):
             return scraper_cls(website=self.website, limit=self.limit)
         return None
 
+    async def get_proxy_site(self) -> str:
+        """Asynchronously checks each proxy URL and returns the first accessible one."""
+        async with aiohttp.ClientSession() as session:
+            for proxy_url in self.proxy_urls:
+                try:
+                    async with session.get(proxy_url, timeout=5) as response:
+                        if response.status == 200:
+                            logger.debug(f"Using proxy: {proxy_url}")
+                            return proxy_url
+                except Exception as e:
+                    logger.debug(f"Proxy check failed for {proxy_url}: {e}")
+        return self.website
+
 
 class X1337(SiteInfo):
     """`1337x.to` Site Info"""
@@ -71,7 +87,6 @@ class X1337(SiteInfo):
         "documentaries",
         "movies"
     ]
-    limit: int = 100
     scraper_module: str = "scrapers.x1337"
     scraper_class: str = "X1337"
 
@@ -88,7 +103,7 @@ class Apibay(SiteInfo):
 class Torlock(SiteInfo):
     """`Torlock.com` Site Info"""
 
-    website: str = "https://www.torlock.com"
+    website: str = "https://torlock2.com"
     trending_available: bool = True
     trending_category: bool = True
     search_by_category: bool = False
@@ -103,7 +118,6 @@ class Torlock(SiteInfo):
         "movies",
         "books"
     ]
-    limit: int = 50
     scraper_module: str = "scrapers.torlock"
     scraper_class: str = "Torlock"
 
@@ -112,21 +126,8 @@ class Zooqle(SiteInfo):
     """`Zooqle.com` Site Info"""
 
     website: str = "https://zooqle.com"
-    limit: int = 30
     scraper_module: str = "scrapers.zooqle"
     scraper_class: str = "Zooqle"
-
-
-class MagnetDL(SiteInfo):
-    """`MagnetDL.com` Site Info"""
-
-    website: str = "https://www.magnetdl.com"
-    recent_available: bool = True
-    recent_category_available: bool = True
-    categories: List[str] = ["apps", "movies", "music", "games", "tv", "books"]
-    limit: int = 40
-    scraper_module: str = "scrapers.magnetdl"
-    scraper_class: str = "MagnetDL"
 
 
 class Torrentgalaxy(SiteInfo):
@@ -146,7 +147,6 @@ class Torrentgalaxy(SiteInfo):
         "movies",
         "books"
     ]
-    limit: int = 50
     scraper_module: str = "scrapers.torrentgalaxy"
     scraper_class: str = "TorrentGalaxy"
 
@@ -156,9 +156,31 @@ class NyaaSi(SiteInfo):
 
     website: str = "https://nyaa.si"
     recent_available: bool = True
-    limit: int = 50
     scraper_module: str = "scrapers.nyaa"
     scraper_class: str = "NyaaSi"
+    proxy_urls: ClassVar[List[str]] = [
+        "https://nyaa.si",
+        "https://nyaadotsi.netlify.app"
+    ]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        asyncio.run(self.set_proxy_site())
+
+    async def set_proxy_site(self):
+        self.website = await self.get_proxy_site()
+
+    async def get_proxy_site(self) -> str:
+        """Asynchronously checks each proxy URL and returns the first accessible one."""
+        async with aiohttp.ClientSession() as session:
+            for proxy_url in self.proxy_urls:
+                try:
+                    async with session.get(proxy_url, timeout=5) as response:
+                        if response.status == 200:
+                            return proxy_url
+                except Exception:
+                    pass
+        return self.website
 
 
 class Piratebay(SiteInfo):
@@ -169,7 +191,6 @@ class Piratebay(SiteInfo):
     recent_available: bool = True
     recent_category_available: bool = True
     categories: List[str] = ["tv"]
-    limit: int = 50
     scraper_module: str = "scrapers.piratebay"
     scraper_class: str = "PirateBay"
 
@@ -200,7 +221,6 @@ class Kickass(SiteInfo):
         "movies",
         "books"
     ]
-    limit: int = 50
     scraper_module: str = "scrapers.kickass"
     scraper_class: str = "Kickass"
 
@@ -216,9 +236,9 @@ class Yts(SiteInfo):
 
 
 class Limetorrent(SiteInfo):
-    """`Limetorrents.pro` Site Info"""
+    """`Limetorrents.lol` Site Info"""
 
-    website: str = "https://www.limetorrents.pro"
+    website: str = "https://limetorrents.lol"
     trending_available: bool = True
     recent_available: bool = True
     recent_category_available: bool = True
@@ -234,26 +254,6 @@ class Limetorrent(SiteInfo):
     scraper_class: str = "Limetorrent"
 
 
-class Torrentfunk(SiteInfo):
-    """`TorrentFunk.com` Site Info"""
-
-    website: str = "https://www.torrentfunk.com"
-    trending_available: bool = True
-    trending_category: bool = True
-    recent_available: bool = True
-    recent_category_available: bool = True
-    categories: List[str] = [
-        "anime",
-        "music",
-        "games",
-        "tv",
-        "movies",
-        "books"
-    ]
-    scraper_module: str = "scrapers.torrentfunk"
-    scraper_class: str = "TorrentFunk"
-
-
 class Glodls(SiteInfo):
     """`TorrentFunk.com` Site Info"""
 
@@ -264,13 +264,12 @@ class Glodls(SiteInfo):
     recent_category_available: bool = False
     scraper_module: str = "scrapers.glodls"
     scraper_class: str = "Glodls"
-    limit: int = 25
 
 
 class Torrentproject(SiteInfo):
     """`TorrentProject2.com` Site Info"""
 
-    website: str = "https://torrentproject2.com"
+    website: str = "https://torrentproject.cc"
     scraper_module: str = "scrapers.torrentproject"
     scraper_class: str = "TorrentProject"
 
@@ -291,7 +290,6 @@ class Yourbittorrent(SiteInfo):
         "movies",
         "books"
     ]
-    limit: int = 20
     scraper_module: str = "scrapers.yourbittorrent"
     scraper_class: str = "YourBittorrent"
 
@@ -300,10 +298,9 @@ class Sites(BaseModel):
     """Sites Model for all available sites."""
 
     x1337: X1337 = X1337()    # Requires flaresolver to bypass cloudflare
-    apibay: Apibay = Apibay()  # No results. Uses captcha I believe?
+    apibay: Apibay = Apibay()
     torlock: Torlock = Torlock()
     zooqle: Zooqle = Zooqle()  # No results. Not sure whats wrong, probably soup needs updated.
-    magnetdl: MagnetDL = MagnetDL()
     torrentgalaxy: Torrentgalaxy = Torrentgalaxy()
     nyaa: NyaaSi = NyaaSi()
     piratebay: Piratebay = Piratebay()
@@ -312,7 +309,6 @@ class Sites(BaseModel):
     yts: Yts = Yts()
     limetorrent: Limetorrent = Limetorrent()
     glodls: Glodls = Glodls()
-    torrentfunk: Torrentfunk = Torrentfunk()
     torrentproject: Torrentproject = Torrentproject()   # Soup needs updating probably, no results
     yourbittorrent: Yourbittorrent = Yourbittorrent()
 
@@ -343,6 +339,16 @@ class Sites(BaseModel):
     def values(self) -> List[SiteInfo]:
         """Returns a list of all site instances."""
         return [getattr(self, key) for key in self.keys()]
+
+    def get(self, key: str, default=None):
+        """Retrieve a site instance by key, with an optional default."""
+        return getattr(self, key, default)
+
+    def set(self, key: str, value: SiteInfo):
+        """Set or update a site instance by key."""
+        if not isinstance(value, SiteInfo):
+            raise ValueError(f"Value must be an instance of SiteInfo, got {type(value)}")
+        setattr(self, key, value)
 
     def get_scraper(self, key: str):
         """Returns the scraper instance associated with the given site key."""

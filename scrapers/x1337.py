@@ -22,33 +22,12 @@ class X1337(BaseScraper):
                     magnet = soup.select_one(".no-top-radius > div > ul > li > a")[
                         "href"
                     ]
-                    uls = soup.find_all("ul", class_="list")[1]
-                    lis = uls.find_all("li")[0]
-                    imgs = [
-                        img["data-original"]
-                        for img in (soup.find("div", id="description")).find_all("img")
-                        if img["data-original"].endswith((".png", ".jpg", ".jpeg"))
-                    ]
-                    files = [
-                        f.text for f in soup.find("div", id="files").find_all("li")
-                    ]
-                    if len(imgs) > 0:
-                        obj["screenshot"] = imgs
-                    obj["category"] = lis.find("span").text
-                    obj["files"] = files
-                    try:
-                        poster = soup.select_one("div.torrent-image img")["src"]
-                        if str(poster).startswith("//"):
-                            obj["poster"] = "https:" + poster
-                        elif str(poster).startswith("/"):
-                            obj["poster"] = self.url + poster
-                    except:
-                        ...
-                    obj["magnet"] = magnet
-
-                    obj["hash"] = re.search(
-                        r"([{a-f\d,A-F\d}]{32,40})\b", magnet
-                    ).group(0)
+                    if magnet:
+                        obj["infohash"] = re.search(
+                            r"([{a-f\d,A-F\d}]{40})\b", magnet
+                        ).group(0)
+                        obj["site"] = self.url
+                        obj.pop("url")
                 except IndexError:
                     ...
         except:
@@ -79,21 +58,10 @@ class X1337(BaseScraper):
                     if name:
                         url = self.url + td[0].find_all("a")[-1]["href"]
                         list_of_urls.append(url)
-                        seeders = td[1].text
-                        leechers = td[2].text
-                        date = td[3].text
-                        size = td[4].text.replace(seeders, "")
-                        uploader = td[5].find("a").text
-
                         my_dict["data"].append(
                             {
                                 "name": name,
-                                "size": size,
-                                "date": date,
-                                "seeders": seeders,
-                                "leechers": leechers,
                                 "url": url,
-                                "uploader": uploader,
                             }
                         )
                     if len(my_dict["data"]) == self.limit:
@@ -148,8 +116,8 @@ class X1337(BaseScraper):
                             results["current_page"] = res["current_page"]
                         except:
                             ...
-                        results["time"] = time.time() - start_time
                         results["total"] = len(results["data"])
+                        results["time"] = time.time() - start_time
                     else:
                         break
                 else:

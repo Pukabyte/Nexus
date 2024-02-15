@@ -108,14 +108,44 @@ class Torlock(BaseScraper):
         except:
             return None, None
 
+    @asyncio_fix
+    async def _fetch_torrent_details(self, session, url):
+        try:
+            async with session.get(url, headers=HEADER_AIO) as res:
+                html = await res.text()
+                soup = BeautifulSoup(html, "html.parser")
+                magnet_link = soup.find("a", href=re.compile(r'^magnet:\?'))
+                if magnet_link:
+                    infohash = re.search(r'btih:([a-zA-Z0-9]+)', magnet_link['href'])
+                    if infohash:
+                        return {
+                            "name": soup.find("title").text.split('|')[0].strip(),
+                            "infohash": infohash.group(1),
+                            "site": self.url
+                        }
+        except Exception as e:
+            print(f"Error fetching torrent details from {url}: {e}")
+        return None
+
     async def search(self, query, page, limit):
+        search_url = f"{self.url}/all/torrents/{query}.html?sort=seeds&page={page}"
         async with aiohttp.ClientSession() as session:
-            start_time = time.time()
-            self.limit = limit
-            url = self.url + "/all/torrents/{}.html?sort=seeds&page={}".format(
-                query, page
-            )
-            return await self.parser_result(start_time, url, session, idx=5)
+            response = await session.get(search_url, headers=HEADER_AIO)
+            if response.status == 200:
+                html = await response.text()
+                soup = BeautifulSoup(html, "html.parser")
+                torrents = soup.find_all("a", href=re.compile(r'^/torrent/'))
+                tasks = []
+                for torrent in torrents[:limit]:
+                    torrent_url = self.url + torrent['href']
+                    task = asyncio.create_task(self._fetch_torrent_details(session, torrent_url))
+                    tasks.append(task)
+                results = await asyncio.gather(*tasks)
+                results = [result for result in results if result]
+                return {"data": results}
+            else:
+                print(f"Failed to search Torlock with status code: {response.status}")
+                return {"data": []}
 
     async def parser_result(self, start_time, url, session, idx=0):
         htmls = await self.get_all_results(session, url)

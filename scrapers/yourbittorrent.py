@@ -6,6 +6,8 @@ from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
 
 
 class YourBittorrent(BaseScraper):
+    """`YourBittorrent` scraper class"""
+
     def __init__(self, website, limit):
         super().__init__()
         self.url = website
@@ -13,40 +15,33 @@ class YourBittorrent(BaseScraper):
 
     @asyncio_fix
     async def _individual_scrap(self, session, url, obj):
-        try:
-            async with session.get(url, headers=HEADER_AIO) as res:
-                html = await res.text(encoding="ISO-8859-1")
-                soup = BeautifulSoup(html, "html.parser")
-                try:
-                    container = soup.select_one("div.card-body.container")
-                    poster = (
-                        container.find("div")
-                        .find_all("div")[0]
-                        .find("picture")
-                        .find("img")["src"]
-                    )
-                    clearfix = soup.find("div", class_="clearfix")
-                    torrent = clearfix.find("div").find_all("div")[1].find("a")["href"]
-                    obj["torrent"] = torrent
-                    obj["poster"] = poster
-                except:
-                    ...
-        except:
-            return None
+        """Scrap individual torrent page for infohash"""
+        async with session.get(url, headers=HEADER_AIO) as res:
+            html = await res.text(encoding="ISO-8859-1")
+            soup = BeautifulSoup(html, "html.parser")
+            try:
+                hash_selector = "body > div > div:nth-child(4) > div.card-body.container > div > div.col > div:nth-child(10) > div.col > kbd"
+                infohash = soup.select_one(hash_selector).text
+                if infohash:
+                    obj["infohash"] = infohash
+                    obj["site"] = self.url
+                    obj.pop("url")
+                else:
+                    return None
+            except:
+                return None
 
     async def _get_torrent(self, result, session, urls):
+        """Get the torrent from individual torrent page"""
         tasks = []
         for idx, url in enumerate(urls):
-            for obj in result["data"]:
-                if obj["url"] == url:
-                    task = asyncio.create_task(
-                        self._individual_scrap(session, url, result["data"][idx])
-                    )
-                    tasks.append(task)
+            tasks.append(asyncio.create_task(self._individual_scrap(session, url, result["data"][idx])))
         await asyncio.gather(*tasks)
+        result["data"] = [torrent for torrent in result["data"] if "infohash" in torrent]
         return result
 
     def _parser(self, htmls, idx=1):
+        """Parse the result from the given HTML."""
         try:
             for html in htmls:
                 soup = BeautifulSoup(html, "html.parser")
@@ -58,17 +53,9 @@ class YourBittorrent(BaseScraper):
                     name = td[1].find("a").get_text(strip=True)
                     url = self.url + td[1].find("a")["href"]
                     list_of_urls.append(url)
-                    size = td[2].text
-                    date = td[3].text
-                    seeders = td[4].text
-                    leechers = td[5].text
                     my_dict["data"].append(
                         {
                             "name": name,
-                            "size": size,
-                            "date": date,
-                            "seeders": seeders,
-                            "leechers": leechers,
                             "url": url,
                         }
                     )
@@ -78,14 +65,8 @@ class YourBittorrent(BaseScraper):
         except:
             return None, None
 
-    async def search(self, query, page, limit):
-        async with aiohttp.ClientSession() as session:
-            start_time = time.time()
-            self.limit = limit
-            url = self.url + "/?v=&c=&q={}".format(query)
-            return await self.parser_result(start_time, url, session, idx=6)
-
     async def parser_result(self, start_time, url, session, idx=1):
+        """Parse the result from the given URL."""
         htmls = await self.get_all_results(session, url)
         result, urls = self._parser(htmls, idx)
         if result is not None:
@@ -95,7 +76,16 @@ class YourBittorrent(BaseScraper):
             return results
         return result
 
+    async def search(self, query, page, limit):
+        """Search the given query from the website"""
+        async with aiohttp.ClientSession() as session:
+            start_time = time.time()
+            self.limit = limit
+            url = self.url + "/?v=&c=&q={}".format(query)
+            return await self.parser_result(start_time, url, session, idx=6)
+
     async def trending(self, category, page, limit):
+        """Get the trending torrents from the website"""
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             self.limit = limit
@@ -111,6 +101,7 @@ class YourBittorrent(BaseScraper):
             return await self.parser_result(start_time, url, session, idx)
 
     async def recent(self, category, page, limit):
+        """Get the recent torrents from the website"""
         async with aiohttp.ClientSession() as session:
             start_time = time.time()
             self.limit = limit
