@@ -125,7 +125,7 @@ class Torlock(SiteInfo):
 class Zooqle(SiteInfo):
     """`Zooqle.com` Site Info"""
 
-    website: str = "https://zooqle.com"
+    website: str = "https://zooqle.skin"
     scraper_module: str = "scrapers.zooqle"
     scraper_class: str = "Zooqle"
 
