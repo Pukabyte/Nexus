@@ -3,8 +3,6 @@ import re
 import time
 import aiohttp
 from bs4 import BeautifulSoup
-from utils.request import get
-from utils.logger import logger
 from scrapers import BaseScraper
 
 
@@ -31,7 +29,7 @@ class NyaaSi(BaseScraper):
                             "infohash": re.search(
                                 r"([{a-f\d,A-F\d}]{40})\b", magnet
                             ).group(0),
-                            "url": self.url,
+                            "site": self.url,
                         }
                     )
                     if len(my_dict["data"]) == self.limit:

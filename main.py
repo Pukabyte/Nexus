@@ -10,7 +10,6 @@ from routers.recent import recent
 from routers.debrid import rdebrid
 
 
-
 app = FastAPI(
     title="Nexus",
     version=VERSION,

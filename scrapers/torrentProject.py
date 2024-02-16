@@ -4,7 +4,6 @@ import aiohttp
 import requests
 from bs4 import BeautifulSoup
 from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
-from utils.logger import logger
 
 
 class TorrentProject(BaseScraper):
@@ -62,12 +61,7 @@ class TorrentProject(BaseScraper):
                     name = span[0].find("a").text
                     url = self.url + span[0].find("a")["href"]
                     list_of_urls.append(url)
-                    my_dict["data"].append(
-                        {
-                            "name": name,
-                            "url": url
-                        }
-                    )
+                    my_dict["data"].append({"name": name, "url": url})
                     if len(my_dict["data"]) == self.limit:
                         break
                 return my_dict, list_of_urls
@@ -80,7 +74,6 @@ class TorrentProject(BaseScraper):
             self.limit = limit
             query = query.replace(" ", "+")
             url = self.url + "/?t={}&orderby=seeders".format(query)
-            logger.info(f"Searching for {query.replace("+", " ")} at {url}")
             return await self.parser_result(start_time, url, session)
 
     async def parser_result(self, start_time, url, session):

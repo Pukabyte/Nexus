@@ -7,6 +7,7 @@ from asyncio import create_task
 
 search = APIRouter(tags=["Search Torrents"], prefix="/search")
 
+
 @search.get("/")
 async def search_torrents(
     query: str,
@@ -32,10 +33,14 @@ async def search_torrents(
 
     if site:
         if site_instance := sites[site]:
-            tasks.append(create_task(site_instance.search(query, page=page, limit=limit)))
+            tasks.append(
+                create_task(site_instance.search(query, page=page, limit=limit))
+            )
     else:
         for _, site_instance in sites.items():
-            tasks.append(create_task(site_instance.search(query, page=page, limit=limit)))
+            tasks.append(
+                create_task(site_instance.search(query, page=page, limit=limit))
+            )
 
     search_results = await asyncio.gather(*tasks)
     combined_results = {"data": [], "total": 0}

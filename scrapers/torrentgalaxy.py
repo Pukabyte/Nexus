@@ -20,19 +20,13 @@ class TorrentGalaxy(BaseScraper):
             )
 
             name = root[0].find_all("div")[-1].get_text(strip=True)
-            category = (
-                root[3].find_all("div")[-1].get_text(strip=True).split(">")[0]
-            )
+            category = root[3].find_all("div")[-1].get_text(strip=True).split(">")[0]
             if category != "XXX":
                 return None
             infohash = root[6].find_all("div")[-1].get_text(strip=True)
             soup.find("div", id="intblockslide").find_all("a")
             my_dict["data"].append(
-                {
-                    "name": name,
-                    "infohash": infohash,
-                    "site": self.url
-                }
+                {"name": name, "infohash": infohash, "site": self.url}
             )
             return my_dict
         except:
@@ -55,8 +49,10 @@ class TorrentGalaxy(BaseScraper):
                         except:
                             magnet = div[3].find_all("a")[1]["href"]
                         category = (
-                            div[0].find("small").text.replace("&nbsp", "")
-                        ).split(":")[0].strip()
+                            (div[0].find("small").text.replace("&nbsp", ""))
+                            .split(":")[0]
+                            .strip()
+                        )
                         if category not in ["XXX", "Books", "Games"]:
                             my_dict["data"].append(
                                 {
@@ -64,8 +60,9 @@ class TorrentGalaxy(BaseScraper):
                                     "infohash": re.search(
                                         r"([{a-f\d,A-F\d}]{40})\b", magnet
                                     ).group(0),
-                                    "site": self.url
-                                })
+                                    "site": self.url,
+                                }
+                            )
                     if len(my_dict["data"]) == self.limit:
                         break
                 try:

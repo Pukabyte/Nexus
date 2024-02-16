@@ -25,10 +25,9 @@ class Kickass(BaseScraper):
                 try:
                     mag = soup.find_all("a", class_="kaGiantButton")
                     magnet = mag[0]["href"]
-                    obj["infohash"] = re.search(
-                        r"btih:([a-fA-F\d]{40})",
-                        magnet
-                    ).group(1)
+                    obj["infohash"] = re.search(r"btih:([a-fA-F\d]{40})", magnet).group(
+                        1
+                    )
                     obj["site"] = self.url
                 except Exception as e:
                     logger.error(f"Error: {e}")
@@ -77,7 +76,11 @@ class Kickass(BaseScraper):
             results["time"] = time.time() - start_time
             results["total"] = len(results["data"])
             results["data"] = [
-                {"name": item["name"], "infohash": item.get("infohash"), "site": item.get("site")}
+                {
+                    "name": item["name"],
+                    "infohash": item.get("infohash"),
+                    "site": item.get("site"),
+                }
                 for item in results["data"]
             ]
             return results
@@ -113,4 +116,3 @@ class Kickass(BaseScraper):
             self.limit = limit
             url = self._build_url(category, "new")
             return await self.parser_result(url, session)
-

@@ -42,4 +42,5 @@ def asyncio_fix(func):
         ):
             asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
         return func(*args)
+
     return wrapper

@@ -3,7 +3,6 @@ from pydantic import BaseModel
 from typing import ClassVar, Dict, List, Optional, Union
 from scrapers import *
 from utils.logger import logger
-from utils.request import ping
 
 
 class SiteInfo(BaseModel):
@@ -79,14 +78,7 @@ class X1337(SiteInfo):
     search_by_category: bool = True
     recent_available: bool = True
     recent_category_available: bool = True
-    categories: List[str] = [
-        "anime",
-        "music",
-        "games",
-        "tv",
-        "documentaries",
-        "movies"
-    ]
+    categories: List[str] = ["anime", "music", "games", "tv", "documentaries", "movies"]
     scraper_module: str = "scrapers.x1337"
     scraper_class: str = "X1337"
 
@@ -116,7 +108,7 @@ class Torlock(SiteInfo):
         "tv",
         "documentaries",
         "movies",
-        "books"
+        "books",
     ]
     scraper_module: str = "scrapers.torlock"
     scraper_class: str = "Torlock"
@@ -145,7 +137,7 @@ class Torrentgalaxy(SiteInfo):
         "tv",
         "documentaries",
         "movies",
-        "books"
+        "books",
     ]
     scraper_module: str = "scrapers.torrentgalaxy"
     scraper_class: str = "TorrentGalaxy"
@@ -160,7 +152,7 @@ class NyaaSi(SiteInfo):
     scraper_class: str = "NyaaSi"
     proxy_urls: ClassVar[List[str]] = [
         "https://nyaa.si",
-        "https://nyaadotsi.netlify.app"
+        "https://nyaadotsi.netlify.app",
     ]
 
     def __init__(self, **kwargs):
@@ -219,7 +211,7 @@ class Kickass(SiteInfo):
         "tv",
         "documentaries",
         "movies",
-        "books"
+        "books",
     ]
     scraper_module: str = "scrapers.kickass"
     scraper_class: str = "Kickass"
@@ -242,14 +234,7 @@ class Limetorrent(SiteInfo):
     trending_available: bool = True
     recent_available: bool = True
     recent_category_available: bool = True
-    categories: List[str] = [
-        "anime",
-        "music",
-        "games",
-        "tv",
-        "movies",
-        "books"
-    ]
+    categories: List[str] = ["anime", "music", "games", "tv", "movies", "books"]
     scraper_module: str = "scrapers.limetorrents"
     scraper_class: str = "Limetorrent"
 
@@ -282,14 +267,7 @@ class Yourbittorrent(SiteInfo):
     trending_category: bool = True
     recent_available: bool = True
     recent_category_available: bool = True
-    categories: List[str] = [
-        "anime",
-        "music",
-        "games",
-        "tv",
-        "movies",
-        "books"
-    ]
+    categories: List[str] = ["anime", "music", "games", "tv", "movies", "books"]
     scraper_module: str = "scrapers.yourbittorrent"
     scraper_class: str = "YourBittorrent"
 
@@ -297,7 +275,7 @@ class Yourbittorrent(SiteInfo):
 class Sites(BaseModel):
     """Sites Model for all available sites."""
 
-    x1337: X1337 = X1337()    # Requires flaresolver to bypass cloudflare
+    x1337: X1337 = X1337()
     apibay: Apibay = Apibay()
     torlock: Torlock = Torlock()
     zooqle: Zooqle = Zooqle()  # No results. Not sure whats wrong, probably soup needs updated.
@@ -309,7 +287,7 @@ class Sites(BaseModel):
     yts: Yts = Yts()
     limetorrent: Limetorrent = Limetorrent()
     glodls: Glodls = Glodls()
-    torrentproject: Torrentproject = Torrentproject()   # Soup needs updating probably, no results
+    torrentproject: Torrentproject = Torrentproject()
     yourbittorrent: Yourbittorrent = Yourbittorrent()
 
     def __getitem__(self, key: str):
@@ -347,7 +325,9 @@ class Sites(BaseModel):
     def set(self, key: str, value: SiteInfo):
         """Set or update a site instance by key."""
         if not isinstance(value, SiteInfo):
-            raise ValueError(f"Value must be an instance of SiteInfo, got {type(value)}")
+            raise ValueError(
+                f"Value must be an instance of SiteInfo, got {type(value)}"
+            )
         setattr(self, key, value)
 
     def get_scraper(self, key: str):
@@ -357,7 +337,10 @@ class Sites(BaseModel):
 
     def items(self) -> Dict[str, Union[str, SiteInfo]]:
         """Returns a dictionary containing site names and corresponding SiteInfo instances."""
-        return [(site_name, getattr(self, site_name)) for site_name in self.__annotations__.keys()]
+        return [
+            (site_name, getattr(self, site_name))
+            for site_name in self.__annotations__.keys()
+        ]
 
     def search(self, site: Optional[str], query: str, page: int, limit: int):
         """Returns search results for the given site and query."""

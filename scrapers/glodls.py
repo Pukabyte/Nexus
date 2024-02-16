@@ -25,13 +25,9 @@ class Glodls(BaseScraper):
                     td = tr.find_all("td")
                     name = td[1].find_all("a")[-1].find("b").text
                     magnet = td[3].find("a")["href"]
-                    infohash = re.search(r'btih:(.{40})', magnet).group(1)
+                    infohash = re.search(r"btih:(.{40})", magnet).group(1)
                     my_dict["data"].append(
-                        {
-                            "name": name,
-                            "infohash": infohash,
-                            "site": self.url
-                        }
+                        {"name": name, "infohash": infohash, "site": self.url}
                     )
                     counter += 1
                     if len(my_dict["data"]) == self.limit:

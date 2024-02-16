@@ -4,6 +4,7 @@ from utils.sites import sites
 
 trending = APIRouter(tags=["Trending Torrents"], prefix="/trending")
 
+
 @trending.get("/")
 async def get_trending(
     site: Optional[str] = None,
@@ -43,7 +44,9 @@ async def get_trending(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Selected category not available.",
-                headers={"available_categories": ", ".join(site_info.categories)},  # Ensure the header value is a string
+                headers={
+                    "available_categories": ", ".join(site_info.categories)
+                },  # Ensure the header value is a string
             )
 
     scraper_instance = site_info.get_scraper_instance()
@@ -54,7 +57,7 @@ async def get_trending(
         )
 
     resp = await scraper_instance.trending(category, page, limit)
-    if resp is None or 'error' in resp:
+    if resp is None or "error" in resp:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No trending data found or an error occurred.",

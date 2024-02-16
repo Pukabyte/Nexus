@@ -114,14 +114,14 @@ class Torlock(BaseScraper):
             async with session.get(url, headers=HEADER_AIO) as res:
                 html = await res.text()
                 soup = BeautifulSoup(html, "html.parser")
-                magnet_link = soup.find("a", href=re.compile(r'^magnet:\?'))
+                magnet_link = soup.find("a", href=re.compile(r"^magnet:\?"))
                 if magnet_link:
-                    infohash = re.search(r'btih:([a-zA-Z0-9]+)', magnet_link['href'])
+                    infohash = re.search(r"btih:([a-zA-Z0-9]+)", magnet_link["href"])
                     if infohash:
                         return {
-                            "name": soup.find("title").text.split('|')[0].strip(),
+                            "name": soup.find("title").text.split("|")[0].strip(),
                             "infohash": infohash.group(1),
-                            "site": self.url
+                            "site": self.url,
                         }
         except Exception as e:
             print(f"Error fetching torrent details from {url}: {e}")
@@ -134,11 +134,13 @@ class Torlock(BaseScraper):
             if response.status == 200:
                 html = await response.text()
                 soup = BeautifulSoup(html, "html.parser")
-                torrents = soup.find_all("a", href=re.compile(r'^/torrent/'))
+                torrents = soup.find_all("a", href=re.compile(r"^/torrent/"))
                 tasks = []
                 for torrent in torrents[:limit]:
-                    torrent_url = self.url + torrent['href']
-                    task = asyncio.create_task(self._fetch_torrent_details(session, torrent_url))
+                    torrent_url = self.url + torrent["href"]
+                    task = asyncio.create_task(
+                        self._fetch_torrent_details(session, torrent_url)
+                    )
                     tasks.append(task)
                 results = await asyncio.gather(*tasks)
                 results = [result for result in results if result]

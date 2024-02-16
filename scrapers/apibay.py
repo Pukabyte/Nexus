@@ -40,11 +40,13 @@ class Apibay(BaseScraper):
                             if counter == limit:
                                 break
                             if isinstance(item, dict):
-                                data["data"].append({
-                                    "name": item.get("name", "N/A"),
-                                    "infohash": item.get("info_hash", "N/A"),
-                                    "site": self.url
-                                })
+                                data["data"].append(
+                                    {
+                                        "name": item.get("name", "N/A"),
+                                        "infohash": item.get("info_hash", "N/A"),
+                                        "site": self.url,
+                                    }
+                                )
                                 counter += 1
                         data["total"] = len(data["data"])
         except Exception as e:

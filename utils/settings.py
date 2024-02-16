@@ -26,4 +26,5 @@ class Settings:
         """Get environment variable"""
         return os.getenv(key, default)
 
+
 settings = Settings()

@@ -11,6 +11,7 @@ class Torrent(BaseModel):
     category: Optional[str] = None
     parsed_data: Optional[dict] = None
 
+
 class Torrents(BaseModel):
     site: str
     torrents: List[Torrent]

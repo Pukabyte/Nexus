@@ -24,12 +24,9 @@ class Yts(BaseScraper):
                     quality = div.find("div", class_="modal-quality").find("span").text
                     magnet = div.find("a", class_="magnet-download")["href"]
                     infohash = re.search(r"btih:([a-fA-F0-9]{40})", magnet).group(1)
-                    torrents.append({
-                        "quality": quality,
-                        "infohash": infohash
-                    })
+                    torrents.append({"quality": quality, "infohash": infohash})
                 return {"name": name, "torrents": torrents, "site": self.url}
-        except Exception as e:
+        except Exception:
             return None
 
     async def _get_torrent(self, result, session, urls):
@@ -39,14 +36,16 @@ class Yts(BaseScraper):
         for movie in movies_data:
             if not movie:
                 continue
-            for torrent in movie['torrents']:
+            for torrent in movie["torrents"]:
                 name_with_quality = f"{movie['name']} [{torrent['quality']}]"
-                flat_results.append({
-                    "name": name_with_quality,
-                    "infohash": torrent["infohash"],
-                    "site": movie["site"]
-                })
-        result['data'] = flat_results
+                flat_results.append(
+                    {
+                        "name": name_with_quality,
+                        "infohash": torrent["infohash"],
+                        "site": movie["site"],
+                    }
+                )
+        result["data"] = flat_results
         return result
 
     def _parser(self, htmls):

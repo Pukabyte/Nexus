@@ -22,7 +22,7 @@ class BitSearch(BaseScraper):
                 my_dict = {"data": []}
                 for divs in soup.find_all("li", class_="search-result"):
                     if len(my_dict["data"]) == self.limit:
-                        break               
+                        break
                     info = divs.find("div", class_="info")
                     name = info.find("h5", class_="title").find("a").text
                     category = info.find("div").find("a", class_="category").text
@@ -38,7 +38,7 @@ class BitSearch(BaseScraper):
                                 "infohash": re.search(
                                     r"([{a-f\d,A-F\d}]{32,40})\b", magnet
                                 ).group(0),
-                                "site": self.url
+                                "site": self.url,
                             }
                         )
                     if len(my_dict["data"]) == self.limit:

@@ -35,9 +35,15 @@ class YourBittorrent(BaseScraper):
         """Get the torrent from individual torrent page"""
         tasks = []
         for idx, url in enumerate(urls):
-            tasks.append(asyncio.create_task(self._individual_scrap(session, url, result["data"][idx])))
+            tasks.append(
+                asyncio.create_task(
+                    self._individual_scrap(session, url, result["data"][idx])
+                )
+            )
         await asyncio.gather(*tasks)
-        result["data"] = [torrent for torrent in result["data"] if "infohash" in torrent]
+        result["data"] = [
+            torrent for torrent in result["data"] if "infohash" in torrent
+        ]
         return result
 
     def _parser(self, htmls, idx=1):

@@ -102,7 +102,6 @@ class Limetorrent(BaseScraper):
             url = self.url + "/search/all/{}//{}".format(query, page)
             return await self.parser_result(start_time, url, session, idx=5)
 
-
     async def trending(self, category, page, limit):
         """Get trending torrents from `Limetorrent`."""
         async with aiohttp.ClientSession() as session:
