@@ -203,35 +203,12 @@ See response
 {
   "data": [
     { 
-      "name": "Eternals.2021.1080p.WEBRip.1600MB.DD5.1.x264-GalaxyRG",
-      "size": "1.6 GB",
-      "date": "Jan. 11th '22",
-      "seeders": "3674",
-      "leechers": "983",
-      "url": "https://1337x.to/torrent/5110228/Eternals-2021-1080p-WEBRip-1600MB-DD5-1-x264-GalaxyRG/",
-      "uploader": "TGxGoodies",
-      "screenshot": [
-        "https://everest.picturedent.org/images/2022/01/11/tmpposter23827.jpg",
-        "https://everest.picturedent.org/images/2022/01/11/Harone8014.th.jpg",
-        "https://everest.picturedent.org/images/2022/01/11/Harone31320.th.jpg",
-        "https://everest.picturedent.org/images/2022/01/11/Harone8129XqiKn.th.jpg",
-        "https://everest.picturedent.org/images/2022/01/11/Harone27162.th.jpg",
-        "https://everest.picturedent.org/images/2022/01/11/Harone1352.th.jpg",
-        "https://everest.picturedent.org/images/2022/01/11/Harone14355.th.jpg"
-      ],
-      "category": "Movies",
-      "files": [
-        "Eternals.2021.1080p.WEBRip.1600MB.DD5.1.x264-GalaxyRG.mkv (1.6 GB)",
-        "[TGx]Downloaded from torrentgalaxy.to .txt (0.7 KB)"
-      ],
-      "poster": "https://lx1.dyncdn.cc/cdn/02/0251ab7772c031c1130bc92810758cd4.jpg",
-      "magnet": "magnet:?xt=urn:btih:20F8D7C2942B143E6E2A0FB5562CDE7EE1B17822&dn=Eternals.2021.1080p.WEBRip.1600MB.DD5.1.x264-GalaxyRG&tr=udp://open.stealth.si:80/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://tracker.torrent.eu.org:451/announce&tr=udp://explodie.org:6969/announce&tr=udp://tracker.cyberia.is:6969/announce&tr=udp://ipv4.tracker.harry.lu:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://tracker.birkenwald.de:6969/announce&tr=udp://tracker.moeking.me:6969/announce&tr=udp://opentor.org:2710/announce&tr=udp://tracker.dler.org:6969/announce&tr=udp://9.rarbg.me:2970/announce&tr=https://tracker.foreverpirates.co:443/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=http://tracker.openbittorrent.com:80/announce&tr=udp://opentracker.i2p.rocks:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechers-paradise.org:6969/announce&tr=udp://coppersurfer.tk:6969/announce&tr=udp://tracker.zer0day.to:1337/announce",
-      "hash": "20F8D7C2942B143E6E2A0FB5562CDE7EE1B17822"
+      "name": "BlackPantherWakanda Forever 2022 1080p BDRip English 10bit H 265",
+      "infohash": "89eeef893e36acf38b48f3b8225427b8c4858c33",
+      "site": "https://yourbittorrent.com"
     }
   ],
-  "current_page": 1,
-  "total_pages": 7,
-  "time": 1.276763677597046,
-  "total": 20
+  "total": 97,
+  "time": 12.513721466064453
 }
 ```
