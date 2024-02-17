@@ -203,12 +203,12 @@ See response
 {
   "data": [
     { 
-      "name": "BlackPantherWakanda Forever 2022 1080p BDRip English 10bit H 265",
-      "infohash": "89eeef893e36acf38b48f3b8225427b8c4858c33",
-      "site": "https://yourbittorrent.com"
+      "name": "Eternals.2021.REPACK.IMAX.WEB-DL.1080p.seleZen.mkv",
+      "infohash": "BCAB80422BBEA1FED70BC7BA43FD350F6644215A",
+      "site": "https://bitsearch.to"
     }
   ],
-  "total": 97,
-  "time": 12.513721466064453
+  "total": 102,
+  "time": 3.7571887969970703
 }
 ```
