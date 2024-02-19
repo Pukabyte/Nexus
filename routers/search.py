@@ -5,6 +5,7 @@ from utils.sites import sites
 from typing import Optional
 from asyncio import create_task
 
+
 search = APIRouter(tags=["Search Torrents"], prefix="/search")
 
 

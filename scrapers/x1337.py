@@ -144,12 +144,3 @@ class X1337(BaseScraper):
             else:
                 url = self.url + "/cat/{}/{}/".format(str(category).capitalize(), page)
             return await self.parser_result(start_time, url, session, page)
-
-    async def search_by_category(self, query, category, page, limit):
-        async with aiohttp.ClientSession() as session:
-            start_time = time.time()
-            self.limit = limit
-            url = self.url + "/category-search/{}/{}/{}/".format(
-                query, category.capitalize(), page
-            )
-            return await self.parser_result(start_time, url, session, page, query)

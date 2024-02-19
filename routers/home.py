@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
-from utils import error_handler
+from routers import error_handler
 from utils.settings import VERSION
 from utils.sites import sites
 

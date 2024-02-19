@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse
 from utils.realdebrid import realdebrid
-from utils import error_handler
+from routers import error_handler
 
 
 rdebrid = APIRouter(tags=["Real Debrid"], prefix="/rd")

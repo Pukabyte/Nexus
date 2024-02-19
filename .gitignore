@@ -1,10 +1,11 @@
 __pycache__
-*.env
-.vscode
-test.py
-*.log
-test.json
 .pytest_cache/
-.env
 
+.vscode
+
+*.env
+*.log
+test.*
 data.*
+logs.*
+log.*

@@ -1,6 +1,9 @@
 import os
 import sys
 import asyncio
+from typing import List
+
+from pydantic import BaseModel
 from utils import asyncio_fix
 
 
@@ -9,6 +12,21 @@ HEADER_AIO = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.67",
     "Cookie": "fencekey=8e5j3p61b3k0a9b0e44c5bbcecafaa5a2",
 }
+
+
+def asyncio_fix(func):
+    """Decorator for fixing asyncio bug on windows"""
+
+    def wrapper(*args):
+        if (
+            sys.version_info[0] == 3
+            and sys.version_info[1] >= 8
+            and sys.platform.startswith("win")
+        ):
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        return func(*args)
+
+    return wrapper
 
 
 class BaseScraper:
@@ -31,16 +49,16 @@ class BaseScraper:
         return await asyncio.gather(asyncio.create_task(self._get_html(session, url)))
 
 
-def asyncio_fix(func):
-    """Decorator for fixing asyncio bug on windows"""
+class Torrent(BaseModel):
+    """Torrent model for storing torrent information."""
 
-    def wrapper(*args):
-        if (
-            sys.version_info[0] == 3
-            and sys.version_info[1] >= 8
-            and sys.platform.startswith("win")
-        ):
-            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-        return func(*args)
+    title: str
+    infohash: str
+    site: str
 
-    return wrapper
+
+class Torrents(BaseModel):
+    """Torrents model for storing a list of Torrent objects."""
+
+    query: str
+    torrents: List[Torrent]

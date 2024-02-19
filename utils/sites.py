@@ -278,7 +278,9 @@ class Sites(BaseModel):
     x1337: X1337 = X1337()
     apibay: Apibay = Apibay()
     torlock: Torlock = Torlock()
-    zooqle: Zooqle = Zooqle()  # No results. Not sure whats wrong, probably soup needs updated.
+    zooqle: Zooqle = (
+        Zooqle()
+    )  # No results. Not sure whats wrong, probably soup needs updated.
     torrentgalaxy: Torrentgalaxy = Torrentgalaxy()
     nyaa: NyaaSi = NyaaSi()
     piratebay: Piratebay = Piratebay()
