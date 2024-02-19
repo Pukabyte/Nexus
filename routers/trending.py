@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
 from typing import Optional
-from utils.sites import sites
 
+from fastapi import APIRouter, HTTPException, status
+
+from utils.sites import sites
 
 trending = APIRouter(tags=["Trending Torrents"], prefix="/trending")
 

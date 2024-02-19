@@ -1,9 +1,10 @@
 import time
+
 import aiohttp
 
+from scrapers import BaseScraper
 from utils.logger import logger
 from utils.realdebrid import realdebrid
-from scrapers import BaseScraper
 
 
 class Apibay(BaseScraper):

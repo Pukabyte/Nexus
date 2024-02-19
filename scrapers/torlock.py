@@ -1,9 +1,11 @@
 import asyncio
 import re
 import time
+
 import aiohttp
 from bs4 import BeautifulSoup
-from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
+
+from scrapers import HEADER_AIO, BaseScraper, asyncio_fix
 
 
 class Torlock(BaseScraper):
@@ -111,7 +113,10 @@ class Torlock(BaseScraper):
                     infohash = re.search(r"btih:([a-zA-Z0-9]+)", magnet_link["href"])
                     if infohash:
                         return {
-                            "name": soup.find("title").text.split("|")[0].strip().strip("Torrent Download"),
+                            "name": soup.find("title")
+                            .text.split("|")[0]
+                            .strip()
+                            .strip("Torrent Download"),
                             "infohash": infohash.group(1),
                             "site": self.url,
                         }

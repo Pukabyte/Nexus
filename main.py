@@ -1,13 +1,12 @@
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from utils.settings import VERSION
 
 from routers.home import base
+from routers.recent import recent
 from routers.search import search
 from routers.trending import trending
-from routers.recent import recent
-
+from utils.settings import VERSION
 
 app = FastAPI(
     title="Nexus",

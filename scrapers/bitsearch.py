@@ -1,7 +1,9 @@
 import re
 import time
+
 import aiohttp
 from bs4 import BeautifulSoup
+
 from scrapers import BaseScraper
 
 
@@ -55,9 +57,7 @@ class BitSearch(BaseScraper):
                     total_pages = (
                         total_pages + 1
                         if type(total_pages) == float
-                        else total_pages
-                        if int(total_pages) > 0
-                        else total_pages + 1
+                        else total_pages if int(total_pages) > 0 else total_pages + 1
                     )
 
                     current_page = int(

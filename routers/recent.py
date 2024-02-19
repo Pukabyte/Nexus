@@ -1,10 +1,11 @@
-import time
 import asyncio
-from fastapi import APIRouter, status, HTTPException
+import time
 from typing import Optional
-from utils.sites import sites
-from utils.logger import logger
 
+from fastapi import APIRouter, HTTPException, status
+
+from utils.logger import logger
+from utils.sites import sites
 
 recent = APIRouter(tags=["Recent Torrents"], prefix="/recent")
 

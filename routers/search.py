@@ -1,11 +1,12 @@
 import time
-from asyncio import gather, Semaphore
-from fastapi import APIRouter, HTTPException, Query
+from asyncio import Semaphore, gather
 from typing import Optional
-from utils.sites import sites
-from utils.realdebrid import realdebrid
-from utils.logger import logger
 
+from fastapi import APIRouter, HTTPException, Query
+
+from utils.logger import logger
+from utils.realdebrid import realdebrid
+from utils.sites import sites
 
 search = APIRouter(tags=["Search Torrents"], prefix="/search")
 
@@ -15,7 +16,7 @@ async def search_torrents(
     query: str,
     site: Optional[str] = None,
     limit: int = Query(default=10, ge=1),
-    page: int = Query(default=1, ge=1)
+    page: int = Query(default=1, ge=1),
 ):
     """Search torrents from all available sites."""
 
@@ -25,6 +26,7 @@ async def search_torrents(
         raise HTTPException(status_code=404, detail=f"Site '{site}' not found.")
 
     semaphore = Semaphore(10)
+
     async def search_site(site_name):
         async with semaphore:
             return await sites[site_name].search(query, page=page, limit=limit)
@@ -36,13 +38,29 @@ async def search_torrents(
 
     logger.info(f"Searching for '{query}' on {site or 'all sites'}")
     search_results = await gather(*tasks, return_exceptions=True)
-    flat_results = [torrent for result in search_results if isinstance(result, dict) for torrent in result.get("data", []) if "infohash" in torrent]
-    infohashes = list({torrent["infohash"].upper() for torrent in flat_results if torrent.get("infohash")})
+    flat_results = [
+        torrent
+        for result in search_results
+        if isinstance(result, dict)
+        for torrent in result.get("data", [])
+        if "infohash" in torrent
+    ]
+    infohashes = list(
+        {
+            torrent["infohash"].upper()
+            for torrent in flat_results
+            if torrent.get("infohash")
+        }
+    )
     logger.info(f"Found {len(infohashes)} torrents from {len(search_results)} sites.")
 
     logger.info(f"Fetching cached results from Real-Debrid.")
     cached_infohashes = await realdebrid.fetch_cached(infohashes, batch_size=20)
-    cached_torrents = [torrent for torrent in flat_results if torrent.get("infohash") and torrent["infohash"].upper() in cached_infohashes]
+    cached_torrents = [
+        torrent
+        for torrent in flat_results
+        if torrent.get("infohash") and torrent["infohash"].upper() in cached_infohashes
+    ]
     logger.info(f"Found {len(cached_infohashes)} total cached torrents.")
 
     if not cached_torrents:

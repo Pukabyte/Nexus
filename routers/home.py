@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
+
 from routers import error_handler
 from utils.settings import VERSION
 from utils.sites import sites
-
 
 base = APIRouter(tags=["Home Route"], prefix="")
 
@@ -42,9 +42,9 @@ async def get_all_supported_sites():
             "recent_available": site_info.recent_available,
             "recent_category_available": site_info.recent_category_available,
             "limit": site_info.limit,
-            "categories": site_info.categories
-            if hasattr(site_info, "categories")
-            else [],
+            "categories": (
+                site_info.categories if hasattr(site_info, "categories") else []
+            ),
         }
 
     return error_handler(

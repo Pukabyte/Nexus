@@ -1,8 +1,10 @@
 import asyncio
 import re
 import time
+
 import aiohttp
 from bs4 import BeautifulSoup
+
 from scrapers import BaseScraper
 
 

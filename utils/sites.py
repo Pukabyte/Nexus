@@ -1,6 +1,8 @@
+from typing import ClassVar, Dict, List, Optional, Union
+
 import aiohttp
 from pydantic import BaseModel
-from typing import ClassVar, Dict, List, Optional, Union
+
 from scrapers import *
 from utils.logger import logger
 

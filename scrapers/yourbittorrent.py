@@ -1,8 +1,10 @@
 import asyncio
 import time
+
 import aiohttp
 from bs4 import BeautifulSoup
-from scrapers import BaseScraper, HEADER_AIO, asyncio_fix
+
+from scrapers import HEADER_AIO, BaseScraper, asyncio_fix
 
 
 class YourBittorrent(BaseScraper):

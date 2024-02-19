@@ -1,6 +1,7 @@
 import re
-import PTN
 from typing import List
+
+import PTN
 
 
 class Parser:

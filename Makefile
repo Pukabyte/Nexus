@@ -79,4 +79,4 @@ format:  ## Format Python code with Black and Isort
 	@isort .
 
 .PHONY: pr-ready
-pr-ready: lint test  ## Run tests and linting to make sure the PR is ready
+pr-ready: format lint  ## Run tests and linting to make sure the PR is ready

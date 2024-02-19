@@ -1,12 +1,13 @@
 import json
-import xmltodict
-import requests
-from utils import logger
 from types import SimpleNamespace
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
-from lxml import etree
 
+import requests
+import xmltodict
+from lxml import etree
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
+from utils import logger
 
 retry_strategy = Retry(
     total=2,

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 
 VERSION = "0.1.0"
 HTTP_PROXY = os.environ.get("HTTP_PROXY", None)

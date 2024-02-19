@@ -1,5 +1,6 @@
 import pytest
-from requests.exceptions import RequestException, ReadTimeout
+from requests.exceptions import ReadTimeout, RequestException
+
 from utils.request import ping
 from utils.sites import sites
 
