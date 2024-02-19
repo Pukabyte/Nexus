@@ -2,6 +2,7 @@ import time
 import aiohttp
 
 from utils.logger import logger
+from utils.realdebrid import realdebrid
 from scrapers import BaseScraper
 
 

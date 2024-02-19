@@ -7,7 +7,6 @@ from routers.home import base
 from routers.search import search
 from routers.trending import trending
 from routers.recent import recent
-from routers.debrid import rdebrid
 
 
 app = FastAPI(
@@ -22,7 +21,6 @@ app.include_router(base)
 app.include_router(search)
 app.include_router(trending)
 app.include_router(recent)
-app.include_router(rdebrid)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

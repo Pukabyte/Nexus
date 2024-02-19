@@ -7,7 +7,7 @@ from utils.sites import sites
 @pytest.mark.asyncio
 async def test_sites_total():
     try:
-        assert len(sites) == 16
+        assert len(sites) == 14
     except AssertionError:
         pytest.fail("Number of sites has changed. Update the tests.")
 

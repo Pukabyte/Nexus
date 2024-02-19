@@ -77,17 +77,9 @@ class Torlock(BaseScraper):
                             break
                         url = self.url + url
                         list_of_urls.append(url)
-                        size = td[2].get_text(strip=True)
-                        date = td[1].get_text(strip=True)
-                        seeders = td[3].get_text(strip=True)
-                        leechers = td[4].get_text(strip=True)
                         my_dict["data"].append(
                             {
                                 "name": name,
-                                "size": size,
-                                "date": date,
-                                "seeders": seeders,
-                                "leechers": leechers,
                                 "url": url,
                             }
                         )
@@ -119,7 +111,7 @@ class Torlock(BaseScraper):
                     infohash = re.search(r"btih:([a-zA-Z0-9]+)", magnet_link["href"])
                     if infohash:
                         return {
-                            "name": soup.find("title").text.split("|")[0].strip(),
+                            "name": soup.find("title").text.split("|")[0].strip().strip("Torrent Download"),
                             "infohash": infohash.group(1),
                             "site": self.url,
                         }

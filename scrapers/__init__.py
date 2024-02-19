@@ -1,10 +1,12 @@
 import os
-import sys
 import asyncio
 from typing import List
+import aiohttp
 
 from pydantic import BaseModel
 from routers import asyncio_fix
+from utils.realdebrid import realdebrid
+from utils.logger import logger
 
 
 HTTP_PROXY = os.environ.get("HTTP_PROXY", None)

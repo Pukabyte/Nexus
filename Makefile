@@ -1,16 +1,11 @@
-# Makefile for managing Docker Compose for the project
-
-# Variables
 COMPOSE_FILE := docker-compose.yml
 NETWORK_NAME := nexus
+PROJECT_NAME := nexus
 
-# Help
-.PHONY: help
-help:  ## Display this help screen
-    @grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-# Detect OS and set commands accordingly
 OS := $(shell uname -s)
+DOCKER_COMPOSE_CMD := $(shell command -v docker-compose || echo "docker compose")
+
+# Detect OS and set grep command accordingly
 ifeq ($(OS),Linux)
     GREP_COMMAND := grep -q
 else ifeq ($(OS),Darwin)
@@ -19,10 +14,16 @@ else
     GREP_COMMAND := findstr
 endif
 
-# Detect Docker Compose command
-DOCKER_COMPOSE_CMD := $(shell command -v docker-compose || echo "docker compose")
+# Help target to display help screen
+.PHONY: help
+help:
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
 
-# Check if the network exists, and if not, create it
+.PHONY: install
+install:  ## Install dependencies
+	@pip install -r requirements.txt
+
+# Prepare Docker network
 .PHONY: prepare-network
 prepare-network:
 	@if ! docker network ls | $(GREP_COMMAND) $(NETWORK_NAME); then \
@@ -32,38 +33,50 @@ prepare-network:
 
 # Docker Compose Commands
 .PHONY: build
-build: prepare-network  ## Build or rebuild services from local compose
-	$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) build
+build: prepare-network  ## Build or rebuild services
+	@$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) build
 
 .PHONY: run
-run: stop  ## Create and start containers from local compose
-	@COMPOSE_PROJECT_NAME=mycustomproject $(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) up -d --build
-	@COMPOSE_PROJECT_NAME=mycustomproject $(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f -t
+run: stop  ## Start containers
+	@COMPOSE_PROJECT_NAME=$(PROJECT_NAME) $(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) up -d --build
+	@COMPOSE_PROJECT_NAME=$(PROJECT_NAME) $(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) logs -f -t
 
 .PHONY: stop
-stop:  ## Stop and remove containers, networks, and images from local compose
-	@-docker container rm -f nexus 2> /dev/null || true
+stop:  ## Stop and remove containers and networks
+	@-docker container rm -f $(NETWORK_NAME) 2> /dev/null || true
 	@$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) down --rmi all -v --remove-orphans
 
 .PHONY: restart
-restart: stop run  ## Restart all services from local compose
+restart: stop run  ## Restart all services
 
 .PHONY: logs
-logs:  ## View output from containers from local compose
-	$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) logs
+logs:  ## View container logs
+	@$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) logs
 
 .PHONY: ps
-ps:  ## List containers from local compose
-	$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) ps
+ps:  ## List containers
+	@$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) ps
 
 .PHONY: shell
-shell:  ## Access the container's shell
-	$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) exec nexus /bin/sh
+shell:  ## Access container shell
+	@$(DOCKER_COMPOSE_CMD) -f $(COMPOSE_FILE) exec $(NETWORK_NAME) /bin/sh
 
 .PHONY: start
-start: ## Start services from python
-	python3 main.py
+start:  ## Start application services
+	@python3 main.py
 
 .PHONY: test
-test: ## Run Pytests
-	pytest -vv
+test:  ## Run tests
+	@pytest
+
+.PHONY: lint
+lint:  ## Lint Python code with Ruff
+	@flake8 .
+
+.PHONY: format
+format:  ## Format Python code with Black and Isort
+	@black .
+	@isort .
+
+.PHONY: pr-ready
+pr-ready: lint test  ## Run tests and linting to make sure the PR is ready

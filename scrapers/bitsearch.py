@@ -36,7 +36,7 @@ class BitSearch(BaseScraper):
                             {
                                 "name": name,
                                 "infohash": re.search(
-                                    r"([{a-f\d,A-F\d}]{32,40})\b", magnet
+                                    r"([{a-f\d,A-F\d}]{40})\b", magnet
                                 ).group(0),
                                 "site": self.url,
                             }

@@ -1,5 +1,4 @@
 import json
-
 import xmltodict
 import requests
 from utils import logger

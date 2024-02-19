@@ -1,9 +1,10 @@
-import asyncio
 import time
+from asyncio import gather, Semaphore
 from fastapi import APIRouter, HTTPException, Query
-from utils.sites import sites
 from typing import Optional
-from asyncio import create_task
+from utils.sites import sites
+from utils.realdebrid import realdebrid
+from utils.logger import logger
 
 
 search = APIRouter(tags=["Search Torrents"], prefix="/search")
@@ -13,46 +14,45 @@ search = APIRouter(tags=["Search Torrents"], prefix="/search")
 async def search_torrents(
     query: str,
     site: Optional[str] = None,
-    limit: Optional[int] = Query(default=10, ge=1),
-    page: Optional[int] = Query(default=1, ge=1),
+    limit: int = Query(default=10, ge=1),
+    page: int = Query(default=1, ge=1)
 ):
-    """
-    Search torrents by query string across all supported sites or a specific site.
+    """Search torrents from all available sites."""
 
-    :param query: The search query string.
-    :param site: Optional. The name of the specific site to search on.
-    :param limit: Optional. The maximum number of results per page.
-    :param page: Optional. The page number of results to retrieve.
-    :return: Combined search results from all sites.
-    """
-    start_time = time.time()
-    query = query.title()
-    tasks = []
+    start_time = time.perf_counter()
 
-    if site and site not in sites.keys():
+    if site and site not in sites:
         raise HTTPException(status_code=404, detail=f"Site '{site}' not found.")
 
+    semaphore = Semaphore(10)
+    async def search_site(site_name):
+        async with semaphore:
+            return await sites[site_name].search(query, page=page, limit=limit)
+
     if site:
-        if site_instance := sites[site]:
-            tasks.append(
-                create_task(site_instance.search(query, page=page, limit=limit))
-            )
+        tasks = [search_site(site)]
     else:
-        for _, site_instance in sites.items():
-            tasks.append(
-                create_task(site_instance.search(query, page=page, limit=limit))
-            )
+        tasks = [search_site(site_name) for site_name in sites.keys()]
 
-    search_results = await asyncio.gather(*tasks)
-    combined_results = {"data": [], "total": 0}
+    logger.info(f"Searching for '{query}' on {site or 'all sites'}")
+    search_results = await gather(*tasks, return_exceptions=True)
+    flat_results = [torrent for result in search_results if isinstance(result, dict) for torrent in result.get("data", []) if "infohash" in torrent]
+    infohashes = list({torrent["infohash"].upper() for torrent in flat_results if torrent.get("infohash")})
+    logger.info(f"Found {len(infohashes)} torrents from {len(search_results)} sites.")
 
-    for result in search_results:
-        if result and result.get("data"):
-            combined_results["data"].extend(result["data"])
-            combined_results["total"] += len(result["data"])
+    logger.info(f"Fetching cached results from Real-Debrid.")
+    cached_infohashes = await realdebrid.fetch_cached(infohashes, batch_size=20)
+    cached_torrents = [torrent for torrent in flat_results if torrent.get("infohash") and torrent["infohash"].upper() in cached_infohashes]
+    logger.info(f"Found {len(cached_infohashes)} total cached torrents.")
 
-    combined_results["time"] = time.time() - start_time
-    if not combined_results["data"]:
-        raise HTTPException(status_code=404, detail="No results found.")
+    if not cached_torrents:
+        raise HTTPException(status_code=204, detail="No cached results found.")
 
-    return combined_results
+    elapsed_time = time.perf_counter() - start_time
+
+    return {
+        "data": cached_torrents[:limit],
+        "total": len(flat_results),
+        "total_cached": len(cached_torrents),
+        "time": elapsed_time.__round__(2),
+    }

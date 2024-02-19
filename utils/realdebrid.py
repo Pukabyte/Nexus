@@ -1,194 +1,74 @@
-import os
-import time
-import json
-import requests
-import itertools
-from pathlib import Path
+import aiohttp
+from utils.request import get
 from utils.logger import logger
 from utils.settings import settings
 
 
 class RD:
+    """Real Debrid class for Real Debrid API operations"""
+
     def __init__(self):
-        self.rd_apitoken = settings.get("RD_APITOKEN")
-        self.base_url = "https://api.real-debrid.com/rest/1.0"
-        self.header = {"Authorization": "Bearer " + str(self.rd_apitoken)}
-        self.error_codes = json.load(
-            open(os.path.join(Path(__file__).parent.absolute(), "error_codes.json"))
-        )
-        self.sleep = int(os.getenv("SLEEP", 2000)) / 1000
-        self.long_sleep = int(os.getenv("LONG_SLEEP", 30000)) / 1000
-        self.count_obj = itertools.cycle(range(0, 501))
-        self.count = next(self.count_obj)
-        self.check_token()
+        self.rd_key = settings.get("RD_APITOKEN")
+        if not self.rd_key:
+            logger.error("Real Debrid API Key not found. Please add it to .env or environment variables.")
+            return
+        self.rd_url = "https://api.real-debrid.com/rest/1.0"
+        self.header = {"Authorization": "Bearer " + str(self.rd_key)}
+        self.initialized = self.validate()
+        if not self.initialized:
+            logger.error("Real Debrid API not initialized.")
+            return
 
-        self.system = self.System(self)
-        self.user = self.User(self)
-        self.unrestrict = self.Unrestrict(self)
-        self.traffic = self.Traffic(self)
-        self.streaming = self.Streaming(self)
-        self.downloads = self.Downloads(self)
-        self.torrents = self.Torrents(self)
+        self.session = None
+        logger.info("Real Debrid API initialized.")
 
-    def get(self, path, **options):
-        request = requests.get(
-            self.base_url + path, headers=self.header, params=options
-        )
-        return self.handler(request, self.error_codes, path)
-
-    def post(self, path, **payload):
-        request = requests.post(self.base_url + path, headers=self.header, data=payload)
-        return self.handler(request, self.error_codes, path)
-
-    def put(self, path, filepath, **payload):
-        with open(filepath, "rb") as file:
-            request = requests.put(
-                self.base_url + path, headers=self.header, data=file, params=payload
-            )
-        return self.handler(request, self.error_codes, path)
-
-    def delete(self, path):
-        request = requests.delete(self.base_url + path, headers=self.header)
-        return self.handler(request, self.error_codes, path)
-
-    def handler(self, request, error_codes, path):
+    def validate(self):
+        """Validate the Real Debrid API key by making a test request."""
         try:
-            request.raise_for_status()
-        except requests.exceptions.HTTPError as errh:
-            logger.error("%s at %s", errh, path)
-        except requests.exceptions.ConnectionError as errc:
-            logger.error("%s at %s", errc, path)
-        except requests.exceptions.Timeout as errt:
-            logger.error("%s at %s", errt, path)
-        except requests.exceptions.RequestException as err:
-            logger.error("%s at %s", err, path)
+            response = get(self.rd_url + "/user", additional_headers=self.header)
+            if not response.status_code == 200:
+                logger.error("Real Debrid API Key is not valid.")
+                return False
+            if not response.data.type == "premium":
+                logger.error("Real Debrid User is not Premium.")
+                return False
+            return True
+        except Exception as e:
+            logger.error(f"Exception occurred while validating Real Debrid API Key: {e}")
+            return False
+
+    async def fetch_cached(self, infohashes, batch_size=20):
+        """Fetch cached status of infohashes from Real Debrid."""
+        cached_infohashes = set()
+        for i in range(0, len(infohashes), batch_size):
+            batch = infohashes[i:i+batch_size]
+            cached_in_batch = await self._hash_check_batch(batch)
+            cached_infohashes.update(cached_in_batch)
+            logger.info(f"Found {len(cached_in_batch)} cached hashes from batch {i//batch_size+1}")
+        return cached_infohashes
+
+    async def _hash_check_batch(self, infohash_batch):
+        """Check a single batch of infohashes for cache status."""
+        if not self.session or self.session.closed:
+            self.session = aiohttp.ClientSession()
+        cached_infohashes = set()
+        hashes_string = '/'.join(infohash.lower() for infohash in infohash_batch)
+        url = f"{self.rd_url}/torrents/instantAvailability/{hashes_string}"
         try:
-            if "error_code" in request.json():
-                code = request.json()["error_code"]
-                message = error_codes.get(str(code), "Unknown error")
-                logger.warning("%s: %s at %s", code, message, path)
-        except:
-            pass
-        self.handle_sleep()
-        return request
+            async with self.session.get(url, headers=self.header) as response:
+                response.raise_for_status()
+                json_response = await response.json()
+                for infohash, data in json_response.items():
+                    if 'rd' in data and data['rd']:
+                        cached_infohashes.add(infohash.upper())
+        except Exception as e:
+            logger.error(f"Error checking cache status for batch: {e}")
+        return cached_infohashes
 
-    def check_token(self):
-        if self.rd_apitoken is None:
-            logger.warning("Add token to .env or environment variables.")
-
-    def handle_sleep(self):
-        if self.count < 500:
-            logger.debug("Sleeping %ss", self.sleep)
-            time.sleep(self.sleep)
-        elif self.count == 500:
-            logger.debug("Sleeping %ss", self.long_sleep)
-            time.sleep(self.long_sleep)
-            self.count = 0
-
-    class System:
-        def __init__(self, rd_instance):
-            self.rd = rd_instance
-
-        def disable_token(self):
-            return self.rd.get("/disable_access_token")
-
-        def time(self):
-            return self.rd.get("/time")
-
-        def iso_time(self):
-            return self.rd.get("/time/iso")
-
-    class User:
-        def __init__(self, rd_instance):
-            self.rd = rd_instance
-
-        def get(self):
-            return self.rd.get("/user")
-
-    class Unrestrict:
-        def __init__(self, rd_instance):
-            self.rd = rd_instance
-
-        def check(self, link, password=None):
-            return self.rd.post("/unrestrict/check", link=link, password=password)
-
-        def link(self, link, password=None, remote=None):
-            return self.rd.post(
-                "/unrestrict/link", link=link, password=password, remote=remote
-            )
-
-        def folder(self, link):
-            return self.rd.post("/unrestrict/folder", link=link)
-
-        def container_file(self, filepath):
-            return self.rd.put("/unrestrict/containerFile", filepath=filepath)
-
-        def container_link(self, link):
-            return self.rd.post("/unrestrict/containerLink", link=link)
-
-    class Traffic:
-        def __init__(self, rd_instance):
-            self.rd = rd_instance
-
-        def get(self):
-            return self.rd.get("/traffic")
-
-        def details(self, start=None, end=None):
-            return self.rd.get("/traffic/details", start=start, end=end)
-
-    class Streaming:
-        def __init__(self, rd_instance):
-            self.rd = rd_instance
-
-        def transcode(self, id):
-            return self.rd.get("/streaming/transcode/" + str(id))
-
-        def media_info(self, id):
-            return self.rd.get("/streaming/mediaInfos/" + str(id))
-
-    class Downloads:
-        def __init__(self, rd_instance):
-            self.rd = rd_instance
-
-        def get(self, offset=None, page=None, limit=None):
-            return self.rd.get("/downloads", offset=offset, page=page, limit=limit)
-
-        def delete(self, id):
-            return self.rd.delete("/downloads/delete/" + str(id))
-
-    class Torrents:
-        def __init__(self, rd_instance):
-            self.rd = rd_instance
-
-        def get(self, offset=None, page=None, limit=None, filter=None):
-            return self.rd.get(
-                "/torrents", offset=offset, page=page, limit=limit, filter=filter
-            )
-
-        def info(self, id):
-            return self.rd.get("/torrents/info/" + str(id))
-
-        def instant_availability(self, hash):
-            return self.rd.get("/torrents/instantAvailability/" + str(hash))
-
-        def active_count(self):
-            return self.rd.get("/torrents/activeCount")
-
-        def available_hosts(self):
-            return self.rd.get("/torrents/availableHosts")
-
-        def add_file(self, filepath, host=None):
-            return self.rd.put("/torrents/addTorrent", filepath=filepath, host=host)
-
-        def add_magnet(self, magnet, host=None):
-            magnet_link = "magnet:?xt=urn:btih:" + str(magnet)
-            return self.rd.post("/torrents/addMagnet", magnet=magnet_link, host=host)
-
-        def select_files(self, id, files):
-            return self.rd.post("/torrents/selectFiles/" + str(id), files=str(files))
-
-        def delete(self, id):
-            return self.rd.delete("/torrents/delete/" + str(id))
+    async def close(self):
+        """Close aiohttp session if it's open."""
+        if self.session:
+            await self.session.close()
 
 
 realdebrid = RD()

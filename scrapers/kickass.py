@@ -22,15 +22,12 @@ class Kickass(BaseScraper):
             async with session.get(url, headers=HEADER_AIO) as res:
                 html = await res.text(encoding="ISO-8859-1")
                 soup = BeautifulSoup(html, "html.parser")
-                try:
-                    mag = soup.find_all("a", class_="kaGiantButton")
-                    magnet = mag[0]["href"]
-                    obj["infohash"] = re.search(r"btih:([a-fA-F\d]{40})", magnet).group(
-                        1
-                    )
+                mag = soup.find_all("a", class_="kaGiantButton")
+                magnet = mag[0]["href"]
+                hash = re.search(r"btih:([a-fA-F\d]{40})", magnet).group(1)
+                if hash:
+                    obj["infohash"] = hash
                     obj["site"] = self.url
-                except Exception as e:
-                    logger.error(f"Error: {e}")
         except Exception as e:
             logger.error(f"Error: {e}")
             return None
